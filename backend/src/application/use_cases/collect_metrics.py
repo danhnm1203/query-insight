@@ -1,10 +1,12 @@
 """Use case for collecting metrics and slow queries from a database."""
 import logging
 from datetime import datetime
+from typing import List
 from uuid import UUID
 
 from src.application.interfaces.unit_of_work import IUnitOfWork
 from src.infrastructure.services.sql_normalizer import SqlNormalizer
+from src.infrastructure.collectors.postgres_collector import PostgresCollector
 from src.domain.entities.query import Query
 from src.domain.entities.metric import Metric, MetricType
 

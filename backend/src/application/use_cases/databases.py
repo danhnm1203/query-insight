@@ -40,3 +40,22 @@ class GetDatabasesUseCase:
         """Execute retrieval."""
         databases = await self.db_repo.get_by_user_id(user_id)
         return [DatabaseRead.model_validate(db) for db in databases]
+
+
+class DeleteDatabaseUseCase:
+    """UseCase for deleting a database."""
+
+    def __init__(self, db_repo: IDatabaseRepository):
+        self.db_repo = db_repo
+
+    async def execute(self, user_id: UUID, database_id: UUID) -> None:
+        """Execute deletion."""
+        # Check ownership
+        database = await self.db_repo.get_by_id(database_id)
+        if not database:
+            return  # Idempotent
+            
+        if database.user_id != user_id:
+            raise PermissionError("User does not own this database")
+            
+        await self.db_repo.delete(database_id)
