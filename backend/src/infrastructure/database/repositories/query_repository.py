@@ -2,7 +2,7 @@
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interfaces.repositories.query_repository import IQueryRepository
@@ -70,6 +70,39 @@ class PostgresQueryRepository(IQueryRepository):
             await self.save(query)
         return queries
 
+    async def get_aggregated_metrics(self, db_id: UUID, hours: int = 24) -> List[dict]:
+        """Get aggregated metrics grouped by normalized_sql."""
+        since = datetime.utcnow() - timedelta(hours=hours)
+        
+        # Query to aggregate metrics by fingerprint
+        stmt = (
+            select(
+                QueryModel.normalized_sql,
+                func.count(QueryModel.id).label("count"),
+                func.avg(QueryModel.execution_time_ms).label("avg_exec_time_ms"),
+                func.max(QueryModel.execution_time_ms).label("max_exec_time_ms"),
+                func.max(QueryModel.timestamp).label("last_seen")
+            )
+            .where(QueryModel.database_id == db_id)
+            .where(QueryModel.timestamp >= since)
+            .group_by(QueryModel.normalized_sql)
+            .order_by(desc("count"))
+        )
+        
+        result = await self.session.execute(stmt)
+        rows = result.all()
+        
+        return [
+            {
+                "normalized_sql": row.normalized_sql,
+                "count": row.count,
+                "avg_exec_time_ms": float(row.avg_exec_time_ms),
+                "max_exec_time_ms": float(row.max_exec_time_ms),
+                "last_seen": row.last_seen
+            }
+            for row in rows
+        ]
+
     def _to_entity(self, model: QueryModel) -> Query:
         """Convert QueryModel to Query entity."""
         from src.domain.entities.recommendation import Recommendation
@@ -102,4 +135,4 @@ class PostgresQueryRepository(IQueryRepository):
             ]
             
         return q
-from datetime import datetime
+from datetime import datetime, timedelta

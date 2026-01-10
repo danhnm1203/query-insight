@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import UUID
 
 from src.application.interfaces.unit_of_work import IUnitOfWork
-from src.infrastructure.collectors.postgres_collector import PostgresCollector
+from src.infrastructure.services.sql_normalizer import SqlNormalizer
 from src.domain.entities.query import Query
 from src.domain.entities.metric import Metric, MetricType
 
@@ -42,10 +42,13 @@ class CollectMetricsUseCase:
                 
                 queries_to_save = []
                 for q_data in slow_queries_data:
+                    # Generate a consistent fingerprint
+                    normalized_sql = SqlNormalizer.normalize(q_data["sql_text"])
+                    
                     query = Query(
                         database_id=database_id,
                         sql_text=q_data["sql_text"],
-                        normalized_sql=q_data["sql_text"], 
+                        normalized_sql=normalized_sql, 
                         execution_time_ms=q_data["mean_exec_time_ms"],
                         timestamp=datetime.utcnow()
                     )

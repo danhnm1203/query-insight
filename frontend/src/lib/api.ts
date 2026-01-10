@@ -103,6 +103,21 @@ class ApiClient {
         return data
     }
 
+    // Intelligence
+    async getQueryPatterns(databaseId: string, hours: number = 24) {
+        const { data } = await this.client.get(
+            `/api/v1/databases/${databaseId}/intelligence/patterns?hours=${hours}`
+        )
+        return data
+    }
+
+    async getPerformanceTrends(databaseId: string) {
+        const { data } = await this.client.get(
+            `/api/v1/databases/${databaseId}/intelligence/trends`
+        )
+        return data
+    }
+
     // Recommendations
     async getRecommendations(queryId: string) {
         const { data } = await this.client.get(`/api/v1/queries/${queryId}/recommendations`)

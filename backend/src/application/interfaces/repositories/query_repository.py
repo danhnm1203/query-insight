@@ -28,3 +28,8 @@ class IQueryRepository(ABC):
     async def save_all(self, queries: List[Query]) -> List[Query]:
         """Save multiple queries."""
         pass
+
+    @abstractmethod
+    async def get_aggregated_metrics(self, db_id: UUID, hours: int = 24) -> List[dict]:
+        """Get aggregated metrics grouped by normalized_sql."""
+        pass

@@ -3,20 +3,24 @@ import { Link } from 'react-router-dom'
 import { useDatabaseStore } from '../store/useDatabaseStore'
 import { api } from '../lib/api'
 import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    AreaChart, Area, BarChart, Bar, Cell
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    AreaChart, Area
 } from 'recharts'
 import {
     Clock, Activity, Zap, AlertTriangle, ChevronRight,
-    Filter, Calendar, Download, RefreshCw, CheckCircle2, AlertCircle
+    RefreshCw, TrendingUp, Layout
 } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
+import QueryPatternsCard from '../components/dashboard/QueryPatternsCard'
+import PerformanceRegressionsCard from '../components/dashboard/PerformanceRegressionsCard'
 
 const DashboardPage: React.FC = () => {
     const { databases, fetchDatabases } = useDatabaseStore()
     const [selectedDbId, setSelectedDbId] = useState<string>('')
     const [metrics, setMetrics] = useState<any[]>([])
     const [slowQueries, setSlowQueries] = useState<any[]>([])
+    const [patterns, setPatterns] = useState<any[]>([])
+    const [regressions, setRegressions] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [timeRange, setTimeRange] = useState('1h')
 
@@ -34,12 +38,16 @@ const DashboardPage: React.FC = () => {
         if (!selectedDbId) return
         setIsLoading(true)
         try {
-            const [metricsData, queriesData] = await Promise.all([
+            const [metricsData, queriesData, patternsData, trendsData] = await Promise.all([
                 api.getMetrics(selectedDbId, timeRange),
-                api.getSlowQueries(selectedDbId, 5)
+                api.getSlowQueries(selectedDbId, 5),
+                api.getQueryPatterns(selectedDbId, 24),
+                api.getPerformanceTrends(selectedDbId)
             ])
             setMetrics(metricsData.metrics || [])
             setSlowQueries(queriesData || [])
+            setPatterns(patternsData || [])
+            setRegressions(trendsData || [])
         } catch (error) {
             console.error('Failed to fetch dashboard data', error)
         } finally {
@@ -93,17 +101,6 @@ const DashboardPage: React.FC = () => {
                             <option key={db.id} value={db.id}>{db.name}</option>
                         ))}
                     </select>
-
-                    {selectedDbId && (
-                        <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-accent/30 border border-border rounded-xl">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
-                                Engine: {databases.find(d => d.id === selectedDbId)?.last_collection_at
-                                    ? `Last run ${formatDistanceToNow(new Date(databases.find(d => d.id === selectedDbId)!.last_collection_at!), { addSuffix: true })}`
-                                    : 'Idle'}
-                            </span>
-                        </div>
-                    )}
 
                     <div className="flex bg-accent/50 p-1 rounded-xl border border-border">
                         {['1h', '6h', '24h'].map(range => (
@@ -176,20 +173,8 @@ const DashboardPage: React.FC = () => {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                                <XAxis
-                                    dataKey="time"
-                                    stroke="hsl(var(--muted-foreground))"
-                                    fontSize={12}
-                                    tickLine={false}
-                                    axisLine={false}
-                                />
-                                <YAxis
-                                    stroke="hsl(var(--muted-foreground))"
-                                    fontSize={12}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tickFormatter={(v) => `${v}`}
-                                />
+                                <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                                 <Tooltip
                                     contentStyle={{
                                         backgroundColor: 'hsl(var(--card))',
@@ -198,20 +183,12 @@ const DashboardPage: React.FC = () => {
                                         fontSize: '12px'
                                     }}
                                 />
-                                <Area
-                                    type="monotone"
-                                    dataKey="value"
-                                    stroke="hsl(var(--primary))"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorValue)"
-                                />
+                                <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                {/* Top Slow Queries Mini List */}
                 <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-lg flex items-center gap-2">
@@ -223,20 +200,20 @@ const DashboardPage: React.FC = () => {
                     <div className="space-y-4 flex-1">
                         {slowQueries.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-center space-y-2 py-8">
-                                <div className="p-3 rounded-full bg-accent text-muted-foreground italic">
+                                <div className="p-3 rounded-full bg-accent text-muted-foreground italic text-xs">
                                     No slow queries detected
                                 </div>
                             </div>
                         ) : (
                             slowQueries.map((query) => (
-                                <div key={query.id} className="group p-4 rounded-2xl hover:bg-accent transition-all border border-border hover:border-primary/20">
+                                <div key={query.id} className="group p-4 rounded-2xl hover:bg-accent transition-all border border-border">
                                     <div className="flex justify-between items-start mb-2">
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 uppercase tracking-wider">
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 uppercase">
                                             {query.execution_time_ms.toFixed(0)}ms
                                         </span>
-                                        <span className="text-[10px] text-muted-foreground">{format(new Date(query.timestamp), 'HH:mm')}</span>
+                                        <span className="text-[10px] text-muted-foreground font-medium">{format(new Date(query.timestamp), 'HH:mm')}</span>
                                     </div>
-                                    <p className="text-xs font-mono line-clamp-2 text-muted-foreground group-hover:text-foreground transition-colors">
+                                    <p className="text-xs font-mono line-clamp-2 text-muted-foreground group-hover:text-foreground">
                                         {query.sql_text}
                                     </p>
                                 </div>
@@ -252,6 +229,12 @@ const DashboardPage: React.FC = () => {
                         <ChevronRight className="w-4 h-4" />
                     </Link>
                 </div>
+            </div>
+
+            {/* Intelligence Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <QueryPatternsCard patterns={patterns.slice(0, 5)} />
+                <PerformanceRegressionsCard regressions={regressions} />
             </div>
         </div>
     )
