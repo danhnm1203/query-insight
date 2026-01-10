@@ -5,6 +5,8 @@ interface User {
     id: string
     email: string
     full_name?: string
+    plan_tier: string
+    onboarding_completed: boolean
 }
 
 interface AuthState {
@@ -13,8 +15,8 @@ interface AuthState {
     isAuthenticated: boolean
     isLoading: boolean
     error: string | null
-    login: (credentials: any) => Promise<void>
     register: (userData: any) => Promise<void>
+    login: (credentials: any) => Promise<void>
     logout: () => void
     checkAuth: () => Promise<void>
 }

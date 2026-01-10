@@ -8,13 +8,15 @@ const RegisterPage: React.FC = () => {
     const [password, setPassword] = useState('')
     const [fullName, setFullName] = useState('')
     const navigate = useNavigate()
-    const { register, isLoading, error } = useAuthStore()
+    const { register, login, isLoading, error } = useAuthStore()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
             await register({ email, password, full_name: fullName })
-            navigate('/login', { state: { message: 'Registration successful! Please login.' } })
+            // Auto login after registration
+            await login({ email, password })
+            navigate('/dashboard')
         } catch (err) {
             // Error is handled by store
         }

@@ -7,7 +7,9 @@ from src.application.use_cases.auth import RegistrationUseCase, LoginUseCase
 from src.domain.entities.user import User
 from src.infrastructure.database.repositories.user_repository import PostgresUserRepository
 from src.infrastructure.database.session import get_db_session
+from src.infrastructure.services.email_service import ResendEmailService
 from src.presentation.api.v1.deps import get_current_user
+from src.config import get_settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -15,11 +17,13 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register(
     user_create: UserCreate,
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
+    settings = Depends(get_settings)
 ):
     """Register a new user."""
     user_repo = PostgresUserRepository(db)
-    use_case = RegistrationUseCase(user_repo)
+    email_service = ResendEmailService(settings)
+    use_case = RegistrationUseCase(user_repo, email_service)
     try:
         return await use_case.execute(user_create)
     except ValueError as e:
@@ -44,3 +48,14 @@ async def login(
 async def get_me(current_user: User = Depends(get_current_user)):
     """Get current authenticated user information."""
     return UserRead.model_validate(current_user)
+
+@router.post("/onboarding/complete")
+async def complete_onboarding(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Mark onboarding as completed for the current user."""
+    user_repo = PostgresUserRepository(db)
+    current_user.onboarding_completed = True
+    await user_repo.update(current_user)
+    return {"status": "success"}

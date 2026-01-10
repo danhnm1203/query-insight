@@ -38,6 +38,13 @@ const Navbar: React.FC = () => {
                                 <Database className="w-4 h-4" />
                                 Databases
                             </Link>
+                            <Link
+                                to="/pricing"
+                                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                            >
+                                <Zap className="w-4 h-4 text-amber-400" />
+                                Pricing
+                            </Link>
                         </div>
                     )}
                 </div>
@@ -64,6 +71,12 @@ const Navbar: React.FC = () => {
                                 className="text-sm font-medium hover:text-primary transition-colors"
                             >
                                 Sign In
+                            </Link>
+                            <Link
+                                to="/pricing"
+                                className="text-sm font-medium hover:text-primary transition-colors mr-4"
+                            >
+                                Pricing
                             </Link>
                             <Link
                                 to="/register"
@@ -101,6 +114,14 @@ const Navbar: React.FC = () => {
                     >
                         <Database className="w-4 h-4" />
                         Databases
+                    </Link>
+                    <Link
+                        to="/pricing"
+                        className="flex items-center gap-3 text-sm font-medium p-2 rounded-lg hover:bg-accent"
+                        onClick={() => setIsMenuOpen(false)}
+                    >
+                        <Zap className="w-4 h-4 text-amber-400" />
+                        Pricing
                     </Link>
                 </div>
             )}

@@ -13,6 +13,8 @@ import {
 import { format, formatDistanceToNow } from 'date-fns'
 import QueryPatternsCard from '../components/dashboard/QueryPatternsCard'
 import PerformanceRegressionsCard from '../components/dashboard/PerformanceRegressionsCard'
+import OnboardingFlow from '../components/onboarding/OnboardingFlow'
+import { useAuthStore } from '../store/useAuthStore'
 
 const DashboardPage: React.FC = () => {
     const { databases, fetchDatabases } = useDatabaseStore()
@@ -23,6 +25,24 @@ const DashboardPage: React.FC = () => {
     const [regressions, setRegressions] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [timeRange, setTimeRange] = useState('1h')
+    const { user, checkAuth } = useAuthStore()
+    const [showOnboarding, setShowOnboarding] = useState(false)
+
+    useEffect(() => {
+        if (user && !user.onboarding_completed) {
+            setShowOnboarding(true)
+        }
+    }, [user])
+
+    const handleCompleteOnboarding = async () => {
+        try {
+            await api.completeOnboarding()
+            setShowOnboarding(false)
+            checkAuth() // Refresh user state
+        } catch (error) {
+            console.error('Failed to complete onboarding', error)
+        }
+    }
 
     useEffect(() => {
         fetchDatabases()
@@ -236,6 +256,8 @@ const DashboardPage: React.FC = () => {
                 <QueryPatternsCard patterns={patterns.slice(0, 5)} />
                 <PerformanceRegressionsCard regressions={regressions} />
             </div>
+
+            {showOnboarding && <OnboardingFlow onComplete={handleCompleteOnboarding} />}
         </div>
     )
 }

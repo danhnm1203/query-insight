@@ -22,6 +22,8 @@ class User:
         hashed_password: str,
         full_name: Optional[str] = None,
         plan_tier: PlanTier = PlanTier.FREE,
+        stripe_customer_id: Optional[str] = None,
+        onboarding_completed: bool = False,
         is_active: bool = True,
         user_id: Optional[UUID] = None,
     ):
@@ -30,6 +32,8 @@ class User:
         self.hashed_password = hashed_password
         self.full_name = full_name
         self.plan_tier = plan_tier
+        self.stripe_customer_id = stripe_customer_id
+        self.onboarding_completed = onboarding_completed
         self.is_active = is_active
         self.created_at = datetime.utcnow()
         self.last_login_at: Optional[datetime] = None

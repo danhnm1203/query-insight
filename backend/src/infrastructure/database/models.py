@@ -40,6 +40,8 @@ class UserModel(Base):
     hashed_password = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=True)
     plan_tier = Column(Enum(PlanTier), default=PlanTier.FREE, nullable=False)
+    stripe_customer_id = Column(String(255), nullable=True, index=True)
+    onboarding_completed = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_login_at = Column(DateTime, nullable=True)

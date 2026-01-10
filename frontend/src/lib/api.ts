@@ -51,6 +51,11 @@ class ApiClient {
         return data
     }
 
+    async completeOnboarding() {
+        const { data } = await this.client.post('/api/v1/auth/onboarding/complete')
+        return data
+    }
+
     // Health check
     async healthCheck() {
         const { data } = await this.client.get('/health')
@@ -131,6 +136,23 @@ class ApiClient {
 
     async dismissRecommendation(id: string) {
         const { data } = await this.client.post(`/api/v1/recommendations/${id}/dismiss`)
+        return data
+    }
+
+    // Billing
+    async createCheckoutSession(planTier: string, successUrl: string, cancelUrl: string) {
+        const { data } = await this.client.post('/api/v1/billing/checkout', {
+            plan_tier: planTier,
+            success_url: successUrl,
+            cancel_url: cancelUrl
+        })
+        return data
+    }
+
+    async createPortalSession(returnUrl: string) {
+        const { data } = await this.client.post('/api/v1/billing/portal', {
+            return_url: returnUrl
+        })
         return data
     }
 }

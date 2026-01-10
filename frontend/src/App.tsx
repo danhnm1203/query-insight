@@ -10,6 +10,7 @@ import DatabasesPage from './pages/DatabasesPage'
 import DashboardPage from './pages/DashboardPage'
 import QueriesPage from './pages/QueriesPage'
 import QueryDetailsPage from './pages/QueryDetailsPage'
+import PricingPage from './pages/PricingPage'
 
 function App() {
     const { checkAuth, isAuthenticated, isLoading } = useAuthStore()
@@ -27,6 +28,7 @@ function App() {
                         <Route path="/" element={<Home />} />
                         <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
                         <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" />} />
+                        <Route path="/pricing" element={<PricingPage />} />
                         <Route
                             path="/dashboard"
                             element={

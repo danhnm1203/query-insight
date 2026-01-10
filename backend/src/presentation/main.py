@@ -13,6 +13,7 @@ from src.presentation.api.v1.metrics import router as metrics_router
 from src.presentation.api.v1.queries import router as queries_router
 from src.presentation.api.v1.recommendations import router as recommendations_router
 from src.presentation.api.v1.intelligence import router as intelligence_router
+from src.presentation.api.v1.billing import router as billing_router
 
 settings = get_settings()
 
@@ -78,6 +79,7 @@ app.include_router(metrics_router, prefix="/api/v1")
 app.include_router(queries_router, prefix="/api/v1")
 app.include_router(recommendations_router, prefix="/api/v1")
 app.include_router(intelligence_router, prefix="/api/v1")
+app.include_router(billing_router, prefix="/api/v1")
 
 
 @app.get("/health")

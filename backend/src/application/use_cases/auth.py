@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from src.application.dto.user_dto import UserCreate, UserLogin, UserRead, Token
 from src.application.interfaces.repositories.user_repository import IUserRepository
+from src.application.interfaces.services.external_services import IEmailService
 from src.application.services.security import hash_password, verify_password, create_access_token
 from src.domain.entities.user import User
 
@@ -11,8 +12,9 @@ from src.domain.entities.user import User
 class RegistrationUseCase:
     """UseCase for registering a new user."""
 
-    def __init__(self, user_repo: IUserRepository):
+    def __init__(self, user_repo: IUserRepository, email_service: IEmailService):
         self.user_repo = user_repo
+        self.email_service = email_service
 
     async def execute(self, user_create: UserCreate) -> UserRead:
         """Execute the registration."""
@@ -31,6 +33,9 @@ class RegistrationUseCase:
 
         # Save to repository
         saved_user = await self.user_repo.save(user)
+        
+        # Send welcome email
+        await self.email_service.send_welcome_email(saved_user.email, saved_user.full_name or "")
         
         return UserRead.model_validate(saved_user)
 
