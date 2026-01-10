@@ -61,6 +61,7 @@ class DatabaseModel(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_connected_at = Column(DateTime, nullable=True)
+    last_collection_at = Column(DateTime, nullable=True)
 
     # Relationships
     user = relationship("UserModel", back_populates="databases")

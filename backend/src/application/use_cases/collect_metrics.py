@@ -67,8 +67,9 @@ class CollectMetricsUseCase:
                 )
                 await self.uow.metrics.save(metric)
                 
-                # 5. Update last connected at
+                # 5. Update last collection timestamps
                 database.update_last_connected()
+                database.update_last_collection()
                 await self.uow.databases.save(database)
 
                 await self.uow.commit()

@@ -34,6 +34,7 @@ class Database:
         self.is_active = is_active
         self.created_at = datetime.utcnow()
         self.last_connected_at: Optional[datetime] = None
+        self.last_collection_at: Optional[datetime] = None
     
     def activate(self) -> None:
         """Activate the database connection."""
@@ -46,6 +47,10 @@ class Database:
     def update_last_connected(self) -> None:
         """Update the last connected timestamp."""
         self.last_connected_at = datetime.utcnow()
+    
+    def update_last_collection(self) -> None:
+        """Update the last collection timestamp."""
+        self.last_collection_at = datetime.utcnow()
     
     def __repr__(self) -> str:
         return f"<Database {self.name} ({self.type})>"

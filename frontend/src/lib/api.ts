@@ -35,6 +35,22 @@ class ApiClient {
         )
     }
 
+    // Auth
+    async register(userData: any) {
+        const { data } = await this.client.post('/api/v1/auth/register', userData)
+        return data
+    }
+
+    async login(credentials: any) {
+        const { data } = await this.client.post('/api/v1/auth/login', credentials)
+        return data
+    }
+
+    async getMe() {
+        const { data } = await this.client.get('/api/v1/auth/me')
+        return data
+    }
+
     // Health check
     async healthCheck() {
         const { data } = await this.client.get('/health')
@@ -44,6 +60,11 @@ class ApiClient {
     // Databases
     async getDatabases() {
         const { data } = await this.client.get('/api/v1/databases')
+        return data
+    }
+
+    async testConnection(database: any) {
+        const { data } = await this.client.post('/api/v1/databases/test-connection', database)
         return data
     }
 

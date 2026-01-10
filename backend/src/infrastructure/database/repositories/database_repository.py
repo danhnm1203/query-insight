@@ -65,7 +65,8 @@ class PostgresDatabaseRepository(IDatabaseRepository):
                 encrypted_connection_string=database.encrypted_connection_string,
                 is_active=database.is_active,
                 created_at=database.created_at,
-                last_connected_at=database.last_connected_at
+                last_connected_at=database.last_connected_at,
+                last_collection_at=database.last_collection_at
             )
             self.session.add(model)
 

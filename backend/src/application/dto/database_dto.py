@@ -32,6 +32,7 @@ class DatabaseRead(DatabaseBase):
     is_active: bool
     created_at: datetime
     last_connected_at: Optional[datetime] = None
+    last_collection_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
