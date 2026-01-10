@@ -67,3 +67,24 @@ async def get_databases(
     db_repo = PostgresDatabaseRepository(db)
     use_case = GetDatabasesUseCase(db_repo)
     return await use_case.execute(current_user.id)
+
+
+@router.delete("/{database_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_database(
+    database_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Delete a database."""
+    from src.application.use_cases.databases import DeleteDatabaseUseCase
+    
+    db_repo = PostgresDatabaseRepository(db)
+    use_case = DeleteDatabaseUseCase(db_repo)
+    
+    try:
+        await use_case.execute(current_user.id, database_id)
+    except PermissionError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this database"
+        )

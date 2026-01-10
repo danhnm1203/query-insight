@@ -19,7 +19,8 @@ class PostgresCollector:
         Args:
             connection_url: asyncpg compatible connection URL (e.g. postgresql://user:pass@host:port/db)
         """
-        self.connection_url = connection_url
+        # asyncpg does not support 'postgresql+asyncpg://' scheme, so we sanitize it
+        self.connection_url = connection_url.replace("postgresql+asyncpg://", "postgresql://")
 
     async def check_extensions(self, conn: asyncpg.Connection) -> bool:
         """Check if required extensions are installed."""
@@ -31,6 +32,16 @@ class PostgresCollector:
         except Exception as e:
             logger.error(f"Error checking extensions: {e}")
             return False
+
+    async def test_connection(self) -> bool:
+        """Test connectivity."""
+        try:
+            conn = await asyncpg.connect(self.connection_url)
+            await conn.close()
+            return True
+        except Exception as e:
+            logger.error(f"Connection failed: {e}")
+            raise e
 
     async def collect_slow_queries(
         self, threshold_ms: float = 100.0, limit: int = 10

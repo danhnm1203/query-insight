@@ -18,10 +18,13 @@ class TestDatabaseConnectionUseCase:
             # For now only postgres is supported
             return False
             
-        collector = PostgresCollector(connection_string)
+        # asyncpg expects 'postgresql://' not 'postgresql+asyncpg://'
+        clean_connection_string = connection_string.replace("postgresql+asyncpg://", "postgresql://")
+            
+        collector = PostgresCollector(clean_connection_string)
         try:
-            # Try to connect and run a simple query
-            await collector.get_metrics()
+            # Try to connect
+            await collector.test_connection()
             return True
         except Exception:
             return False
