@@ -45,4 +45,9 @@ async def get_current_user(
     user = await user_repo.get_by_id(UUID(token_data.user_id))
     if user is None:
         raise credentials_exception
+    
+    # Add user context to Sentry
+    import sentry_sdk
+    sentry_sdk.set_user({"id": str(user.id), "email": user.email})
+    
     return user

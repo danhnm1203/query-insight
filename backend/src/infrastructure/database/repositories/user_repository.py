@@ -47,6 +47,7 @@ class PostgresUserRepository(IUserRepository):
             user_model.full_name = user.full_name
             user_model.plan_tier = user.plan_tier
             user_model.is_active = user.is_active
+            user_model.onboarding_completed = user.onboarding_completed
         else:
             # Create new model
             user_model = UserModel(
@@ -56,6 +57,7 @@ class PostgresUserRepository(IUserRepository):
                 full_name=user.full_name,
                 plan_tier=user.plan_tier,
                 is_active=user.is_active,
+                onboarding_completed=user.onboarding_completed,
                 created_at=user.created_at
             )
             self.session.add(user_model)
@@ -81,5 +83,6 @@ class PostgresUserRepository(IUserRepository):
             full_name=model.full_name,
             plan_tier=model.plan_tier,
             is_active=model.is_active,
+            onboarding_completed=model.onboarding_completed,
             user_id=model.id
         )

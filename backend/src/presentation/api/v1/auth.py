@@ -57,5 +57,6 @@ async def complete_onboarding(
     """Mark onboarding as completed for the current user."""
     user_repo = PostgresUserRepository(db)
     current_user.onboarding_completed = True
-    await user_repo.update(current_user)
+    await user_repo.save(current_user)
+    await db.commit()
     return {"status": "success"}

@@ -30,6 +30,7 @@ class UserRead(UserBase):
     id: UUID
     plan_tier: PlanTier
     is_active: bool
+    onboarding_completed: bool
     created_at: datetime
 
     class Config:

@@ -2,7 +2,7 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -14,6 +14,7 @@ from src.presentation.api.v1.queries import router as queries_router
 from src.presentation.api.v1.recommendations import router as recommendations_router
 from src.presentation.api.v1.intelligence import router as intelligence_router
 from src.presentation.api.v1.billing import router as billing_router
+from src.presentation.api.v1.debug import router as debug_router
 
 settings = get_settings()
 
@@ -21,6 +22,10 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     """Application lifespan events."""
+    # Configure logging
+    from src.infrastructure.logging.config import configure_logging
+    configure_logging(level="DEBUG" if settings.debug else "INFO")
+    
     # Startup
     print(f"🚀 Starting {settings.app_name}...")
     print(f"📊 Environment: {settings.env}")
@@ -61,6 +66,15 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def request_id_header(request: Request, call_next):
+    import uuid
+    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
+
+
 @app.get("/")
 async def root():
     """Root endpoint."""
@@ -80,6 +94,7 @@ app.include_router(queries_router, prefix="/api/v1")
 app.include_router(recommendations_router, prefix="/api/v1")
 app.include_router(intelligence_router, prefix="/api/v1")
 app.include_router(billing_router, prefix="/api/v1")
+app.include_router(debug_router, prefix="/api/v1")
 
 
 @app.get("/health")
