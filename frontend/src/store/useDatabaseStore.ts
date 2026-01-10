@@ -20,7 +20,7 @@ interface DatabaseState {
     deleteDatabase: (id: string) => Promise<void>
 }
 
-export const useDatabaseStore = create<DatabaseState>((set, get) => ({
+export const useDatabaseStore = create<DatabaseState>((set) => ({
     databases: [],
     isLoading: false,
     error: null,

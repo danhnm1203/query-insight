@@ -13,7 +13,7 @@ import QueryDetailsPage from './pages/QueryDetailsPage'
 import PricingPage from './pages/PricingPage'
 
 function App() {
-    const { checkAuth, isAuthenticated, isLoading } = useAuthStore()
+    const { checkAuth, isAuthenticated } = useAuthStore()
 
     useEffect(() => {
         checkAuth()
@@ -106,22 +106,6 @@ function Home() {
     )
 }
 
-function DashboardPlaceholder() {
-    return (
-        <div className="space-y-4">
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Coming soon...</p>
-        </div>
-    )
-}
 
-function DatabasesPlaceholder() {
-    return (
-        <div className="space-y-4">
-            <h1 className="text-3xl font-bold">Databases</h1>
-            <p className="text-muted-foreground">Coming soon...</p>
-        </div>
-    )
-}
 
 export default App

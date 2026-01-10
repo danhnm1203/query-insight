@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import {
     Search, Filter, ArrowUpDown, ChevronRight,
-    ArrowLeft, Clock, History, Zap, CheckCircle2,
+    ArrowLeft, CheckCircle2,
     AlertTriangle, Database
 } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
@@ -105,8 +105,8 @@ const QueriesPage: React.FC = () => {
                                 <tr key={query.id} className="group hover:bg-accent/20 transition-all">
                                     <td className="px-6 py-4">
                                         <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tighter ${query.status === 'SLOW'
-                                                ? 'bg-rose-500/10 text-rose-500'
-                                                : 'bg-emerald-500/10 text-emerald-500'
+                                            ? 'bg-rose-500/10 text-rose-500'
+                                            : 'bg-emerald-500/10 text-emerald-500'
                                             }`}>
                                             {query.status === 'SLOW' ? <AlertTriangle className="w-3" /> : <CheckCircle2 className="w-3" />}
                                             {query.status}
