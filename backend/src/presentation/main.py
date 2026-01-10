@@ -15,6 +15,7 @@ from src.presentation.api.v1.recommendations import router as recommendations_ro
 from src.presentation.api.v1.intelligence import router as intelligence_router
 from src.presentation.api.v1.billing import router as billing_router
 from src.presentation.api.v1.debug import router as debug_router
+from src.presentation.api.v1.health import router as health_router
 
 settings = get_settings()
 
@@ -87,6 +88,7 @@ async def root():
 
 
 # Include routers
+app.include_router(health_router, prefix="")  # Root level /health
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(database_router, prefix="/api/v1")
 app.include_router(metrics_router, prefix="/api/v1")
@@ -97,16 +99,7 @@ app.include_router(billing_router, prefix="/api/v1")
 app.include_router(debug_router, prefix="/api/v1")
 
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint for monitoring."""
-    return JSONResponse(
-        status_code=200,
-        content={
-            "status": "healthy",
-            "service": settings.app_name,
-        },
-    )
+
 
 
 if __name__ == "__main__":
