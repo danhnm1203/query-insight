@@ -8,9 +8,9 @@ import {
 } from 'recharts'
 import {
     Clock, Activity, Zap, AlertTriangle, ChevronRight,
-    RefreshCw, TrendingUp, Layout, Database
+    RefreshCw, Database
 } from 'lucide-react'
-import { format, formatDistanceToNow } from 'date-fns'
+import { format } from 'date-fns'
 import QueryPatternsCard from '../components/dashboard/QueryPatternsCard'
 import PerformanceRegressionsCard from '../components/dashboard/PerformanceRegressionsCard'
 import OnboardingFlow from '../components/onboarding/OnboardingFlow'

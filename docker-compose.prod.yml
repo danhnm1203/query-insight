@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: queryinsight-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: queryinsight
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-prod_secure_password}
+      POSTGRES_DB: queryinsight_prod
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      # Init script handles DB creation if needed, though usually migration tool does schema
+      - ./backend/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U queryinsight"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements,timescaledb"]
+
+  redis:
+    image: redis:7-alpine
+    container_name: queryinsight-redis
+    restart: always
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: queryinsight-backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql+asyncpg://queryinsight:${POSTGRES_PASSWORD:-prod_secure_password}@postgres:5432/queryinsight_prod
+      REDIS_URL: redis://redis:6379
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SECRET_KEY: ${SECRET_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      ENV: production
+      DEBUG: "False"
+      # In prod, we typically want Sentry DSN passed in env
+      SENTRY_DSN: ${SENTRY_DSN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn src.presentation.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: queryinsight-celery
+    restart: always
+    environment:
+      DATABASE_URL: postgresql+asyncpg://queryinsight:${POSTGRES_PASSWORD:-prod_secure_password}@postgres:5432/queryinsight_prod
+      REDIS_URL: redis://redis:6379
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SECRET_KEY: ${SECRET_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    depends_on:
+      - postgres
+      - redis
+    command: celery -A src.infrastructure.queue.app.celery_app worker --loglevel=info
+
+  # Nginx serving Frontend + Reverse Proxy
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.prod
+      args:
+        VITE_API_URL: /api
+    container_name: queryinsight-web
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Build time arg, strictly speaking, but nice to denote. 
+      # Actually VITE_ vars are needed at BUILD time in Dockerfile.prod
+      # So we need args in build section.
+      VITE_API_URL: /api 
+    depends_on:
+      - backend
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
