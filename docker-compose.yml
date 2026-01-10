@@ -19,6 +19,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements,timescaledb"]
 
   # Redis for caching and message queue
   redis:
@@ -78,7 +79,7 @@ services:
     depends_on:
       - postgres
       - redis
-    command: celery -A src.infrastructure.queue.celery_app worker --loglevel=info
+    command: celery -A src.infrastructure.queue.app.celery_app worker --loglevel=info
 
   # Frontend (React + Vite)
   frontend:

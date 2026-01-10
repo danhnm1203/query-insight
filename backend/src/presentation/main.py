@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.config import get_settings
+from src.presentation.api.v1.auth import router as auth_router
+from src.presentation.api.v1.databases import router as database_router
 
 settings = get_settings()
 
@@ -63,6 +65,11 @@ async def root():
         "status": "running",
         "environment": settings.env,
     }
+
+
+# Include routers
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(database_router, prefix="/api/v1")
 
 
 @app.get("/health")

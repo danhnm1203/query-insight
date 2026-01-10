@@ -22,6 +22,7 @@ class User:
         hashed_password: str,
         full_name: Optional[str] = None,
         plan_tier: PlanTier = PlanTier.FREE,
+        is_active: bool = True,
         user_id: Optional[UUID] = None,
     ):
         self.id = user_id or uuid4()
@@ -29,7 +30,7 @@ class User:
         self.hashed_password = hashed_password
         self.full_name = full_name
         self.plan_tier = plan_tier
-        self.is_active = True
+        self.is_active = is_active
         self.created_at = datetime.utcnow()
         self.last_login_at: Optional[datetime] = None
     

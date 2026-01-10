@@ -91,42 +91,42 @@
 
 ### Database Setup
 
-- [ ] Create Alembic migrations
-- [ ] Set up database schema
-  - [ ] Users table
-  - [ ] Databases table
-  - [ ] Queries table
-  - [ ] Metrics table (TimescaleDB hypertable)
-  - [ ] Recommendations table
-- [ ] Seed test data
+- [x] Create Alembic migrations
+- [x] Set up database schema
+  - [x] Users table
+  - [x] Databases table
+  - [x] Queries table
+  - [x] Metrics table (TimescaleDB hypertable)
+  - [x] Recommendations table
+- [x] Seed test data
 
 ### PostgreSQL Collector (Proof of Concept)
 
-- [ ] Connect to PostgreSQL database
-- [ ] Query `pg_stat_statements`
-- [ ] Capture slow queries (>1000ms)
-- [ ] Get EXPLAIN ANALYZE output
+- [x] Connect to PostgreSQL database
+- [x] Query `pg_stat_statements`
+- [x] Capture slow queries (>1000ms)
+- [x] Get EXPLAIN ANALYZE output
 - [ ] Parse query parameters
 - [ ] Normalize queries (remove literals)
 
 ### EXPLAIN Analyzer
 
-- [ ] Parse JSON EXPLAIN output
-- [ ] Detect Sequential Scans
-- [ ] Detect missing indexes on JOINs
-- [ ] Detect missing indexes on WHERE clauses
-- [ ] Calculate query costs
-- [ ] Identify performance bottlenecks
+- [x] Parse JSON EXPLAIN output
+- [x] Detect Sequential Scans
+- [x] Detect missing indexes on JOINs
+- [x] Detect missing indexes on WHERE clauses
+- [x] Calculate query costs
+- [x] Identify performance bottlenecks
 
 ### Index Recommendation Engine
 
-- [ ] Extract tables and columns from queries
-- [ ] Analyze WHERE clauses
-- [ ] Analyze JOIN conditions
-- [ ] Analyze ORDER BY clauses
-- [ ] Check existing indexes
-- [ ] Generate CREATE INDEX statements
-- [ ] Estimate impact (cost reduction %)
+- [x] Extract tables and columns from queries
+- [x] Analyze WHERE clauses
+- [x] Analyze JOIN conditions
+- [x] Analyze ORDER BY clauses
+- [x] Check existing indexes (fetch from system tables)
+- [x] Generate CREATE INDEX statements
+- [x] Estimate impact (cost reduction %)
 
 ### Simple API & Dashboard
 
@@ -154,11 +154,14 @@
 ### Application Layer
 
 - [ ] Create DTOs
+  - [ ] UserDTO
   - [ ] QueryDTO
   - [ ] DatabaseDTO
   - [ ] MetricDTO
   - [ ] RecommendationDTO
+- [/] Implement Authentication Use Cases
 - [ ] Define repository interfaces
+  - [ ] IUserRepository
   - [ ] IQueryRepository
   - [ ] IDatabaseRepository
   - [ ] IMetricRepository

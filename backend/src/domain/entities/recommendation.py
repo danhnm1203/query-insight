@@ -15,6 +15,8 @@ class RecommendationType(str, Enum):
     DENORMALIZE = "denormalize"  # Denormalize tables
     LIMIT = "limit"  # Add LIMIT clause
     AVOID_N_PLUS_ONE = "avoid_n_plus_one"  # Fix N+1 query pattern
+    SCALING = "scaling"  # Scale database resources
+    SCHEMA_CHANGE = "schema_change"  # Change table schema (e.g. data type)
 
 
 class RecommendationStatus(str, Enum):
