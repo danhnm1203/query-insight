@@ -13,8 +13,10 @@ class QueryStatus(str, Enum):
     ERROR = "error"
 
 
+from src.domain.entities.recommendation import Recommendation, RecommendationStatus
+
 class Query:
-    """Query entity representing a database query execution."""
+    """Query entity representing a captured database query."""
     
     def __init__(
         self,
@@ -24,7 +26,6 @@ class Query:
         execution_time_ms: float,
         timestamp: datetime,
         explain_plan: Optional[Dict] = None,
-        status: QueryStatus = QueryStatus.SLOW,
         query_id: Optional[UUID] = None,
     ):
         self.id = query_id or uuid4()
@@ -32,10 +33,11 @@ class Query:
         self.sql_text = sql_text
         self.normalized_sql = normalized_sql
         self.execution_time_ms = execution_time_ms
+        self.explain_plan = explain_plan
         self.timestamp = timestamp
-        self.explain_plan = explain_plan or {}
-        self.status = status
+        self.status = QueryStatus.SLOW if execution_time_ms > 10.0 else QueryStatus.NORMAL
         self.created_at = datetime.utcnow()
+        self.recommendations: List[Recommendation] = []
     
     def is_slow(self, threshold_ms: float = 1000) -> bool:
         """Check if query execution time exceeds threshold."""

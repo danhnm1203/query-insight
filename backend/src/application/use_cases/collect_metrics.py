@@ -16,27 +16,28 @@ class CollectMetricsUseCase:
     def __init__(self, uow: IUnitOfWork):
         self.uow = uow
 
-    async def execute(self, database_id: UUID) -> None:
+    async def execute(self, database_id: UUID) -> List[UUID]:
         """
         Collect results from pg_stat_statements and basic metrics.
         
         Args:
             database_id: ID of the database to collect from.
+        
+        Returns:
+            List of new slow query IDs.
         """
         async with self.uow:
             # 1. Get database connection info
             database = await self.uow.databases.get_by_id(database_id)
             if not database or not database.is_active:
                 logger.warning(f"Database {database_id} not found or inactive.")
-                return
+                return []
 
             # 2. Initialize collector
-            # Note: In production, we'd decrypt the connection string here
             collector = PostgresCollector(database.encrypted_connection_string)
 
             try:
                 # 3. Collect slow queries
-                # We use a 10ms threshold for the production engine initially
                 slow_queries_data = await collector.collect_slow_queries(threshold_ms=10.0, limit=20)
                 
                 queries_to_save = []
@@ -44,20 +45,19 @@ class CollectMetricsUseCase:
                     query = Query(
                         database_id=database_id,
                         sql_text=q_data["sql_text"],
-                        # In the future, we'll implement normalization
                         normalized_sql=q_data["sql_text"], 
                         execution_time_ms=q_data["mean_exec_time_ms"],
                         timestamp=datetime.utcnow()
                     )
                     queries_to_save.append(query)
                 
+                new_query_ids = []
                 if queries_to_save:
-                    await self.uow.queries.save_all(queries_to_save)
+                    saved_queries = await self.uow.queries.save_all(queries_to_save)
+                    new_query_ids = [q.id for q in saved_queries]
                     logger.info(f"Collected {len(queries_to_save)} queries for DB {database_id}")
 
                 # 4. Collect basic metrics
-                # For this PoC/Phase 1, we just record "qps" as a placeholder for activity
-                # Real metrics would come from more system view queries
                 metric = Metric(
                     database_id=database_id,
                     metric_type=MetricType.QPS,
@@ -73,6 +73,7 @@ class CollectMetricsUseCase:
                 await self.uow.databases.save(database)
 
                 await self.uow.commit()
+                return new_query_ids
 
             except Exception as e:
                 logger.error(f"Error collecting from database {database_id}: {e}")

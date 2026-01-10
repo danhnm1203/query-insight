@@ -9,6 +9,9 @@ from fastapi.responses import JSONResponse
 from src.config import get_settings
 from src.presentation.api.v1.auth import router as auth_router
 from src.presentation.api.v1.databases import router as database_router
+from src.presentation.api.v1.metrics import router as metrics_router
+from src.presentation.api.v1.queries import router as queries_router
+from src.presentation.api.v1.recommendations import router as recommendations_router
 
 settings = get_settings()
 
@@ -70,6 +73,9 @@ async def root():
 # Include routers
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(database_router, prefix="/api/v1")
+app.include_router(metrics_router, prefix="/api/v1")
+app.include_router(queries_router, prefix="/api/v1")
+app.include_router(recommendations_router, prefix="/api/v1")
 
 
 @app.get("/health")
@@ -82,13 +88,6 @@ async def health_check():
             "service": settings.app_name,
         },
     )
-
-
-# Import and include routers (will be added in next phase)
-# from src.presentation.api.v1 import databases, queries, recommendations
-# app.include_router(databases.router, prefix="/api/v1/databases", tags=["databases"])
-# app.include_router(queries.router, prefix="/api/v1/queries", tags=["queries"])
-# app.include_router(recommendations.router, prefix="/api/v1/recommendations", tags=["recommendations"])
 
 
 if __name__ == "__main__":

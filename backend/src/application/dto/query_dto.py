@@ -1,8 +1,9 @@
 from datetime import datetime
 from uuid import UUID
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from pydantic import BaseModel
 
+from src.application.dto.recommendation_dto import RecommendationRead
 from src.domain.entities.query import QueryStatus
 
 class QueryRead(BaseModel):
@@ -14,6 +15,7 @@ class QueryRead(BaseModel):
     explain_plan: Optional[Dict] = None
     timestamp: datetime
     status: QueryStatus
+    recommendations: List[RecommendationRead] = []
 
     class Config:
         from_attributes = True
