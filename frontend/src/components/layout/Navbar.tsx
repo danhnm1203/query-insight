@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/useAuthStore'
-import { LogOut, LayoutDashboard, Database, User, Menu, X } from 'lucide-react'
+import { LogOut, LayoutDashboard, Database, User, Menu, X, Zap } from 'lucide-react'
 
 const Navbar: React.FC = () => {
     const { isAuthenticated, user, logout } = useAuthStore()

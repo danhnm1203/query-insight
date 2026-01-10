@@ -8,7 +8,7 @@ import {
 } from 'recharts'
 import {
     Clock, Activity, Zap, AlertTriangle, ChevronRight,
-    RefreshCw, TrendingUp, Layout
+    RefreshCw, TrendingUp, Layout, Database
 } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
 import QueryPatternsCard from '../components/dashboard/QueryPatternsCard'
@@ -147,115 +147,139 @@ const DashboardPage: React.FC = () => {
             </div>
 
             {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                    title="Avg throughput"
-                    value={`${stats.avgQps} QPS`}
-                    icon={<Activity className="w-5 h-5 text-blue-500" />}
-                    trend="+12%"
-                />
-                <StatCard
-                    title="Slow queries"
-                    value={stats.slowCount}
-                    icon={<AlertTriangle className="w-5 h-5 text-amber-500" />}
-                    trend="-2"
-                />
-                <StatCard
-                    title="Peak Latency"
-                    value={`${stats.maxLatency} ms`}
-                    icon={<Clock className="w-5 h-5 text-rose-500" />}
-                    trend="+5ms"
-                />
-                <StatCard
-                    title="Status"
-                    value={stats.health}
-                    icon={<Zap className="w-5 h-5 text-emerald-500" />}
-                    trend="Stable"
-                />
-            </div>
-
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 rounded-3xl border border-border bg-card p-6 shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
-                        <h3 className="font-bold text-lg flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-primary" />
-                            Throughput (Queries Per Second)
-                        </h3>
+            {databases.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
+                    <div className="p-6 rounded-3xl bg-primary/10 text-primary">
+                        <Database className="w-12 h-12" />
                     </div>
-                    <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
-                                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                                <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: 'hsl(var(--card))',
-                                        borderColor: 'hsl(var(--border))',
-                                        borderRadius: '12px',
-                                        fontSize: '12px'
-                                    }}
-                                />
-                                <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                    <div className="space-y-2 max-w-md">
+                        <h2 className="text-2xl font-bold">No Databases Connected</h2>
+                        <p className="text-muted-foreground">
+                            Connect your first database to start analyzing query performance and get AI-powered optimization tips.
+                        </p>
                     </div>
-                </div>
-
-                <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-lg flex items-center gap-2">
-                            <Clock className="w-5 h-5 text-rose-500" />
-                            Recent Slow Queries
-                        </h3>
-                    </div>
-
-                    <div className="space-y-4 flex-1">
-                        {slowQueries.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center space-y-2 py-8">
-                                <div className="p-3 rounded-full bg-accent text-muted-foreground italic text-xs">
-                                    No slow queries detected
-                                </div>
-                            </div>
-                        ) : (
-                            slowQueries.map((query) => (
-                                <div key={query.id} className="group p-4 rounded-2xl hover:bg-accent transition-all border border-border">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 uppercase">
-                                            {query.execution_time_ms.toFixed(0)}ms
-                                        </span>
-                                        <span className="text-[10px] text-muted-foreground font-medium">{format(new Date(query.timestamp), 'HH:mm')}</span>
-                                    </div>
-                                    <p className="text-xs font-mono line-clamp-2 text-muted-foreground group-hover:text-foreground">
-                                        {query.sql_text}
-                                    </p>
-                                </div>
-                            ))
-                        )}
-                    </div>
-
                     <Link
-                        to={`/databases/${selectedDbId}/queries`}
-                        className="mt-6 w-full py-3 text-sm font-bold text-primary hover:bg-primary/5 rounded-xl transition-all flex items-center justify-center gap-2"
+                        to="/databases"
+                        className="px-8 py-3 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all"
                     >
-                        View All Queries
-                        <ChevronRight className="w-4 h-4" />
+                        Connect Database
                     </Link>
                 </div>
-            </div>
+            ) : (
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <StatCard
+                            title="Avg throughput"
+                            value={`${stats.avgQps} QPS`}
+                            icon={<Activity className="w-5 h-5 text-blue-500" />}
+                            trend="+12%"
+                        />
+                        <StatCard
+                            title="Slow queries"
+                            value={stats.slowCount}
+                            icon={<AlertTriangle className="w-5 h-5 text-amber-500" />}
+                            trend="-2"
+                        />
+                        <StatCard
+                            title="Peak Latency"
+                            value={`${stats.maxLatency} ms`}
+                            icon={<Clock className="w-5 h-5 text-rose-500" />}
+                            trend="+5ms"
+                        />
+                        <StatCard
+                            title="Status"
+                            value={stats.health}
+                            icon={<Zap className="w-5 h-5 text-emerald-500" />}
+                            trend="Stable"
+                        />
+                    </div>
 
-            {/* Intelligence Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <QueryPatternsCard patterns={patterns.slice(0, 5)} />
-                <PerformanceRegressionsCard regressions={regressions} />
-            </div>
+                    {/* Charts Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 rounded-3xl border border-border bg-card p-6 shadow-sm">
+                            <div className="flex items-center justify-between mb-8">
+                                <h3 className="font-bold text-lg flex items-center gap-2">
+                                    <Activity className="w-5 h-5 text-primary" />
+                                    Throughput (Queries Per Second)
+                                </h3>
+                            </div>
+                            <div className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
+                                                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                                        <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'hsl(var(--card))',
+                                                borderColor: 'hsl(var(--border))',
+                                                borderRadius: '12px',
+                                                fontSize: '12px'
+                                            }}
+                                        />
+                                        <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="font-bold text-lg flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-rose-500" />
+                                    Recent Slow Queries
+                                </h3>
+                            </div>
+
+                            <div className="space-y-4 flex-1">
+                                {slowQueries.length === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-center space-y-2 py-8">
+                                        <div className="p-3 rounded-full bg-accent text-muted-foreground italic text-xs">
+                                            No slow queries detected
+                                        </div>
+                                    </div>
+                                ) : (
+                                    slowQueries.map((query) => (
+                                        <div key={query.id} className="group p-4 rounded-2xl hover:bg-accent transition-all border border-border">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 uppercase">
+                                                    {query.execution_time_ms.toFixed(0)}ms
+                                                </span>
+                                                <span className="text-[10px] text-muted-foreground font-medium">{format(new Date(query.timestamp), 'HH:mm')}</span>
+                                            </div>
+                                            <p className="text-xs font-mono line-clamp-2 text-muted-foreground group-hover:text-foreground">
+                                                {query.sql_text}
+                                            </p>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            {selectedDbId && (
+                                <Link
+                                    to={`/databases/${selectedDbId}/queries`}
+                                    className="mt-6 w-full py-3 text-sm font-bold text-primary hover:bg-primary/5 rounded-xl transition-all flex items-center justify-center gap-2"
+                                >
+                                    View All Queries
+                                    <ChevronRight className="w-4 h-4" />
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Intelligence Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <QueryPatternsCard patterns={patterns.slice(0, 5)} />
+                        <PerformanceRegressionsCard regressions={regressions} />
+                    </div>
+                </>
+            )}
 
             {showOnboarding && <OnboardingFlow onComplete={handleCompleteOnboarding} />}
         </div>
