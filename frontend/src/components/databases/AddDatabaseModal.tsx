@@ -112,20 +112,11 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="">None (Manual Setup)</SelectItem>
-                                    {Object.entries(DATABASE_PRESETS).map(([key, preset]) => {
-                                        const Icon = preset.icon
-                                        return (
-                                            <SelectItem key={key} value={key}>
-                                                <div className="flex items-center gap-2">
-                                                    <Icon className="w-4 h-4" />
-                                                    <div>
-                                                        <div className="font-medium">{preset.name}</div>
-                                                        <div className="text-xs text-muted-foreground">{preset.description}</div>
-                                                    </div>
-                                                </div>
-                                            </SelectItem>
-                                        )
-                                    })}
+                                    {Object.entries(DATABASE_PRESETS).map(([key, preset]) => (
+                                        <SelectItem key={key} value={key}>
+                                            {preset.name} - {preset.description}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             {selectedPreset && (
