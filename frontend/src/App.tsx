@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { useEffect } from 'react'
+import { Toaster } from './components/ui/toaster'
 import { useAuthStore } from './store/useAuthStore'
 
 import Navbar from './components/layout/Navbar'
@@ -63,6 +64,7 @@ function App() {
                         />
                     </Routes>
                 </main>
+                <Toaster />
             </div>
         </Router>
     )

@@ -1,13 +1,28 @@
-import React, { useState, useEffect } from 'react'
-import { Database, Plus, Trash2, RefreshCw, CheckCircle2, XCircle, Clock, Activity } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Database, Plus, Trash2, RefreshCw, CheckCircle2, XCircle, Clock, Activity, BarChart3, List } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useDatabaseStore } from '../store/useDatabaseStore'
 import AddDatabaseModal from '../components/databases/AddDatabaseModal'
+import { Button } from '../components/ui/button'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '../components/ui/alert-dialog'
 
 const DatabasesPage: React.FC = () => {
     const { databases, fetchDatabases, deleteDatabase, isLoading, error } = useDatabaseStore()
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+    const [databaseToDelete, setDatabaseToDelete] = useState<{ id: string; name: string } | null>(null)
+    const navigate = useNavigate()
 
     useEffect(() => {
         fetchDatabases()
@@ -19,9 +34,17 @@ const DatabasesPage: React.FC = () => {
         setIsRefreshing(false)
     }
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Are you sure you want to remove this database connection?')) {
-            await deleteDatabase(id)
+    const handleDelete = async (id: string, name: string, e: React.MouseEvent) => {
+        e.stopPropagation() // Prevent card click
+        setDatabaseToDelete({ id, name })
+        setDeleteDialogOpen(true)
+    }
+
+    const confirmDelete = async () => {
+        if (databaseToDelete) {
+            await deleteDatabase(databaseToDelete.id)
+            setDeleteDialogOpen(false)
+            setDatabaseToDelete(null)
         }
     }
 
@@ -86,7 +109,11 @@ const DatabasesPage: React.FC = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {databases.map((db) => (
-                        <div key={db.id} className="group relative rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:shadow-md hover:border-primary/20">
+                        <div
+                            key={db.id}
+                            onClick={() => navigate(`/databases/${db.id}/queries`)}
+                            className="group relative rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
+                        >
                             <div className="flex items-start justify-between">
                                 <div className="p-3 rounded-xl bg-primary/10 text-primary">
                                     <Database className="w-6 h-6" />
@@ -111,7 +138,7 @@ const DatabasesPage: React.FC = () => {
                                 <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">{db.type}</p>
                             </div>
 
-                            <div className="mt-6 pt-4 border-t border-border flex flex-col gap-2">
+                            <div className="mt-6 pt-4 border-t border-border flex flex-col gap-3">
                                 <div className="flex items-center justify-between text-xs">
                                     <span className="text-muted-foreground flex items-center gap-1">
                                         <Activity className="w-3 h-3" />
@@ -123,17 +150,46 @@ const DatabasesPage: React.FC = () => {
                                             : 'Waiting...'}
                                     </span>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px] text-muted-foreground">
-                                        Added {formatDistanceToNow(new Date(db.created_at), { addSuffix: true })}
-                                    </span>
-                                    <button
-                                        onClick={() => handleDelete(db.id)}
-                                        className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+
+                                {/* Quick Actions */}
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 h-8 text-xs"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate(`/dashboard?db=${db.id}`)
+                                        }}
+                                    >
+                                        <BarChart3 className="w-3 h-3 mr-1.5" />
+                                        Dashboard
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 h-8 text-xs"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            navigate(`/databases/${db.id}/queries`)
+                                        }}
+                                    >
+                                        <List className="w-3 h-3 mr-1.5" />
+                                        Queries
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                        onClick={(e) => handleDelete(db.id, db.name, e)}
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
+                                    </Button>
                                 </div>
+
+                                <span className="text-[10px] text-muted-foreground text-center">
+                                    Added {formatDistanceToNow(new Date(db.created_at), { addSuffix: true })}
+                                </span>
                             </div>
                         </div>
                     ))}
@@ -144,6 +200,27 @@ const DatabasesPage: React.FC = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
             />
+
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Database Connection?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to remove <span className="font-semibold text-foreground">{databaseToDelete?.name}</span>?
+                            This will stop monitoring this database and remove all collected data. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDelete}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete Database
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
