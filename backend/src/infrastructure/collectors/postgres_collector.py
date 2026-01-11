@@ -121,3 +121,49 @@ class PostgresCollector:
                     pass
         finally:
             await conn.close()
+
+    async def get_explain_plan_safe(self, sql_text: str) -> Optional[Dict[str, Any]]:
+        """
+        Get EXPLAIN plan, handling parameterized queries safely.
+        
+        Strategy:
+        1. Try direct EXPLAIN first
+        2. If fails due to parameters, replace them with NULL and retry
+        3. Return plan or None
+        
+        Args:
+            sql_text: SQL query text (may contain $1, $2, etc. placeholders)
+            
+        Returns:
+            EXPLAIN plan as dict or None if unable to get plan
+        """
+        # Try direct EXPLAIN first
+        plan = await self.get_explain_plan(sql_text)
+        if plan:
+            return plan
+        
+        # If failed, check if it's due to parameters
+        if '$' in sql_text:
+            logger.info(f"Query has parameters, attempting with NULL substitution")
+            normalized_sql = self._replace_parameters_with_null(sql_text)
+            return await self.get_explain_plan(normalized_sql)
+        
+        return None
+    
+    def _replace_parameters_with_null(self, sql: str) -> str:
+        """
+        Replace $1, $2, etc. with NULL for EXPLAIN purposes.
+        
+        Note: This is a simple heuristic. The EXPLAIN plan may not be 100% accurate
+        since NULL values might cause different query plans than actual values,
+        but it's better than no plan at all.
+        
+        Args:
+            sql: SQL query with parameter placeholders
+            
+        Returns:
+            SQL query with parameters replaced by NULL
+        """
+        import re
+        # Replace $1, $2, etc. with NULL
+        return re.sub(r'\$\d+', 'NULL', sql)
