@@ -50,16 +50,34 @@ class AnalyzeTrendsUseCase:
                 
                 # Check for significant degradation (e.g., > 30% increase AND > 50ms absolute increase)
                 if recent_avg > baseline_avg * 1.3 and (recent_avg - baseline_avg) > 50:
+                    increase_pct = ((recent_avg / baseline_avg) - 1) * 100
+                    
+                    # Determine severity
+                    if recent_avg > baseline_avg * 5:
+                        severity = "CRITICAL"
+                    elif recent_avg > baseline_avg * 2:
+                        severity = "HIGH"
+                    else:
+                        severity = "MEDIUM"
+                    
                     regressions.append({
                         "normalized_sql": fingerprint,
+                        "sample_sql": recent.get("sample_sql", fingerprint),
                         "recent_avg_ms": recent_avg,
                         "baseline_avg_ms": baseline_avg,
-                        "increase_percentage": ((recent_avg / baseline_avg) - 1) * 100,
+                        "increase_percentage": increase_pct,
+                        "severity": severity,
                         "count": recent["count"],
                         "last_seen": recent["last_seen"]
                     })
             
-            # Sort by absolute increase to show most impactful first
-            regressions.sort(key=lambda x: (x["recent_avg_ms"] - x["baseline_avg_ms"]), reverse=True)
+            # Sort by severity then by absolute increase
+            severity_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}
+            regressions.sort(
+                key=lambda x: (
+                    severity_order.get(x["severity"], 3),
+                    -(x["recent_avg_ms"] - x["baseline_avg_ms"])
+                )
+            )
             
             return regressions

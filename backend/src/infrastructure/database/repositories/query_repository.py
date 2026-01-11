@@ -71,7 +71,7 @@ class PostgresQueryRepository(IQueryRepository):
         return queries
 
     async def get_aggregated_metrics(self, db_id: UUID, hours: int = 24) -> List[dict]:
-        """Get aggregated metrics grouped by normalized_sql."""
+        """Get aggregated metrics grouped by normalized_sql with enhanced pattern detection."""
         since = datetime.utcnow() - timedelta(hours=hours)
         
         # Query to aggregate metrics by fingerprint
@@ -81,12 +81,17 @@ class PostgresQueryRepository(IQueryRepository):
                 func.count(QueryModel.id).label("count"),
                 func.avg(QueryModel.execution_time_ms).label("avg_exec_time_ms"),
                 func.max(QueryModel.execution_time_ms).label("max_exec_time_ms"),
-                func.max(QueryModel.timestamp).label("last_seen")
+                func.min(QueryModel.execution_time_ms).label("min_exec_time_ms"),
+                func.max(QueryModel.timestamp).label("last_seen"),
+                # Get a sample SQL for display
+                func.max(QueryModel.sql_text).label("sample_sql")
             )
             .where(QueryModel.database_id == db_id)
             .where(QueryModel.timestamp >= since)
             .group_by(QueryModel.normalized_sql)
+            .having(func.count(QueryModel.id) > 1)  # Only patterns that repeat
             .order_by(desc("count"))
+            .limit(10)
         )
         
         result = await self.session.execute(stmt)
@@ -95,10 +100,14 @@ class PostgresQueryRepository(IQueryRepository):
         return [
             {
                 "normalized_sql": row.normalized_sql,
+                "sample_sql": row.sample_sql,
                 "count": row.count,
                 "avg_exec_time_ms": float(row.avg_exec_time_ms),
                 "max_exec_time_ms": float(row.max_exec_time_ms),
-                "last_seen": row.last_seen
+                "min_exec_time_ms": float(row.min_exec_time_ms),
+                "last_seen": row.last_seen,
+                # Heuristic: If query repeats more than 10 times, likely N+1
+                "is_n_plus_one": row.count > 10
             }
             for row in rows
         ]

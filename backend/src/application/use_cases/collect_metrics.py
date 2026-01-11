@@ -62,15 +62,35 @@ class CollectMetricsUseCase:
                     new_query_ids = [q.id for q in saved_queries]
                     logger.info(f"Collected {len(queries_to_save)} queries for DB {database_id}")
 
-                # 4. Collect basic metrics
-                metric = Metric(
+                # 4. Collect enhanced metrics
+                timestamp = datetime.utcnow()
+                metrics_to_save = []
+                
+                # QPS metric (query count)
+                metrics_to_save.append(Metric(
                     database_id=database_id,
                     metric_type=MetricType.QPS,
                     value=float(len(slow_queries_data)),
-                    timestamp=datetime.utcnow(),
+                    timestamp=timestamp,
                     metadata={"captured_queries": len(slow_queries_data)}
-                )
-                await self.uow.metrics.save(metric)
+                ))
+                
+                # Average execution time
+                if slow_queries_data:
+                    avg_exec_time = sum(q["mean_exec_time_ms"] for q in slow_queries_data) / len(slow_queries_data)
+                    metrics_to_save.append(Metric(
+                        database_id=database_id,
+                        metric_type=MetricType.AVG_EXEC_TIME,
+                        value=avg_exec_time,
+                        timestamp=timestamp,
+                        metadata={"query_count": len(slow_queries_data)}
+                    ))
+                
+                # Save all metrics
+                for metric in metrics_to_save:
+                    await self.uow.metrics.save(metric)
+                
+                logger.info(f"Saved {len(metrics_to_save)} metrics for DB {database_id}")
                 
                 # 5. Update last collection timestamps
                 database.update_last_connected()
