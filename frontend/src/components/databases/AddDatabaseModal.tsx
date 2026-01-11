@@ -19,8 +19,6 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
     const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
     const [selectedPreset, setSelectedPreset] = useState<DatabasePresetKey | ''>('')
 
-    if (!isOpen) return null
-
     const handleTestConnection = async () => {
         setIsTesting(true)
         setTestResult(null)
@@ -36,7 +34,7 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
     }
 
     const handlePresetSelect = (presetKey: string) => {
-        if (!presetKey) {
+        if (!presetKey || presetKey === 'none') {
             setSelectedPreset('')
             return
         }
@@ -66,6 +64,8 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
             // Error is handled by store
         }
     }
+
+    if (!isOpen) return null
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
@@ -111,21 +111,12 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
                                     <SelectValue placeholder="Choose a database preset..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">None (Manual Setup)</SelectItem>
-                                    {Object.entries(DATABASE_PRESETS).map(([key, preset]) => {
-                                        const Icon = preset.icon
-                                        return (
-                                            <SelectItem key={key} value={key}>
-                                                <div className="flex items-center gap-2">
-                                                    <Icon className="w-4 h-4" />
-                                                    <div>
-                                                        <div className="font-medium">{preset.name}</div>
-                                                        <div className="text-xs text-muted-foreground">{preset.description}</div>
-                                                    </div>
-                                                </div>
-                                            </SelectItem>
-                                        )
-                                    })}
+                                    <SelectItem value="none">None (Manual Setup)</SelectItem>
+                                    {Object.entries(DATABASE_PRESETS).map(([key, preset]) => (
+                                        <SelectItem key={key} value={key}>
+                                            {`${preset.name} - ${preset.description}`}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             {selectedPreset && (
