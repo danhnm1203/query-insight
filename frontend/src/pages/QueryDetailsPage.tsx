@@ -8,6 +8,7 @@ import {
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { RecommendationsList } from '../components/query/RecommendationsList'
+import { ConfirmationDialog } from '../components/recommendations/ConfirmationDialog'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 
@@ -17,6 +18,15 @@ const QueryDetailsPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true)
     const [copied, setCopied] = useState(false)
     const [loadingRecs, setLoadingRecs] = useState<Set<string>>(new Set())
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean
+        type: 'apply' | 'dismiss' | null
+        recommendation: any | null
+    }>({
+        open: false,
+        type: null,
+        recommendation: null
+    })
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -193,56 +203,71 @@ const QueryDetailsPage: React.FC = () => {
                             <RecommendationsList
                                 recommendations={query.recommendations || []}
                                 loadingIds={loadingRecs}
-                                onApply={async (id) => {
-                                    setLoadingRecs(prev => new Set(prev).add(id))
-                                    setQuery((prev: any) => ({
-                                        ...prev,
-                                        recommendations: prev.recommendations.map((rec: any) =>
-                                            rec.id === id ? { ...rec, status: 'APPLIED' } : rec
-                                        )
-                                    }))
-                                    try {
-                                        await api.applyRecommendation(id)
-                                        toast.success('Recommendation applied successfully!')
-                                    } catch (error) {
-                                        setQuery((prev: any) => ({
-                                            ...prev,
-                                            recommendations: prev.recommendations.map((rec: any) =>
-                                                rec.id === id ? { ...rec, status: 'PENDING' } : rec
-                                            )
-                                        }))
-                                        toast.error('Failed to apply recommendation')
-                                    } finally {
-                                        setLoadingRecs(prev => {
-                                            const next = new Set(prev)
-                                            next.delete(id)
-                                            return next
+                                onApply={(recommendation) => {
+                                    setConfirmDialog({
+                                        open: true,
+                                        type: 'apply',
+                                        recommendation
+                                    })
+                                }}
+                                onDismiss={(recommendation) => {
+                                    setConfirmDialog({
+                                        open: true,
+                                        type: 'dismiss',
+                                        recommendation
+                                    })
+                                }}
+                            />
+
+                            {/* Confirmation Dialog */}
+                            <ConfirmationDialog
+                                open={confirmDialog.open}
+                                onOpenChange={(open) => {
+                                    if (!open) {
+                                        setConfirmDialog({
+                                            open: false,
+                                            type: null,
+                                            recommendation: null
                                         })
                                     }
                                 }}
-                                onDismiss={async (id) => {
-                                    setLoadingRecs(prev => new Set(prev).add(id))
+                                actionType={confirmDialog.type || 'apply'}
+                                recommendation={confirmDialog.recommendation}
+                                isLoading={confirmDialog.recommendation ? loadingRecs.has(confirmDialog.recommendation.id) : false}
+                                onConfirm={async () => {
+                                    if (!confirmDialog.recommendation) return
+                                    const rec = confirmDialog.recommendation
+                                    const isApply = confirmDialog.type === 'apply'
+
+                                    setLoadingRecs(prev => new Set(prev).add(rec.id))
                                     setQuery((prev: any) => ({
                                         ...prev,
-                                        recommendations: prev.recommendations.map((rec: any) =>
-                                            rec.id === id ? { ...rec, status: 'DISMISSED' } : rec
+                                        recommendations: prev.recommendations.map((r: any) =>
+                                            r.id === rec.id ? { ...r, status: isApply ? 'APPLIED' : 'DISMISSED' } : r
                                         )
                                     }))
+
                                     try {
-                                        await api.dismissRecommendation(id)
-                                        toast.success('Recommendation dismissed')
+                                        if (isApply) {
+                                            await api.applyRecommendation(rec.id)
+                                            toast.success('Recommendation applied successfully!')
+                                        } else {
+                                            await api.dismissRecommendation(rec.id)
+                                            toast.success('Recommendation dismissed')
+                                        }
+                                        setConfirmDialog({ open: false, type: null, recommendation: null })
                                     } catch (error) {
                                         setQuery((prev: any) => ({
                                             ...prev,
-                                            recommendations: prev.recommendations.map((rec: any) =>
-                                                rec.id === id ? { ...rec, status: 'PENDING' } : rec
+                                            recommendations: prev.recommendations.map((r: any) =>
+                                                r.id === rec.id ? { ...r, status: 'PENDING' } : r
                                             )
                                         }))
-                                        toast.error('Failed to dismiss recommendation')
+                                        toast.error(`Failed to ${isApply ? 'apply' : 'dismiss'} recommendation`)
                                     } finally {
                                         setLoadingRecs(prev => {
                                             const next = new Set(prev)
-                                            next.delete(id)
+                                            next.delete(rec.id)
                                             return next
                                         })
                                     }

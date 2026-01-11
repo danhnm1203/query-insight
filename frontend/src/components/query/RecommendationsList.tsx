@@ -7,8 +7,8 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 interface RecommendationListProps {
     recommendations: any[]
-    onApply?: (id: string) => void | Promise<void>
-    onDismiss?: (id: string) => void | Promise<void>
+    onApply?: (recommendation: any) => void | Promise<void>
+    onDismiss?: (recommendation: any) => void | Promise<void>
     loadingIds?: Set<string>
 }
 
@@ -119,7 +119,7 @@ export function RecommendationsList({ recommendations, onApply, onDismiss, loadi
                         <CardFooter className="pt-0 gap-2">
                             {onApply && (
                                 <Button
-                                    onClick={() => onApply(rec.id)}
+                                    onClick={() => onApply(rec)}
                                     className="flex-1"
                                     size="sm"
                                     disabled={loadingIds?.has(rec.id)}
@@ -136,7 +136,7 @@ export function RecommendationsList({ recommendations, onApply, onDismiss, loadi
                             )}
                             {onDismiss && (
                                 <Button
-                                    onClick={() => onDismiss(rec.id)}
+                                    onClick={() => onDismiss(rec)}
                                     variant="outline"
                                     className="flex-1"
                                     size="sm"
