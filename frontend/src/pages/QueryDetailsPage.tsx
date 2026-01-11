@@ -6,6 +6,8 @@ import {
     Share2, Copy, BarChart3, Info, Layout, Database
 } from 'lucide-react'
 import { format } from 'date-fns'
+import { RecommendationsList } from '../components/query/RecommendationsList'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 
 const QueryDetailsPage: React.FC = () => {
     const { queryId } = useParams<{ queryId: string }>()
@@ -150,90 +152,27 @@ const QueryDetailsPage: React.FC = () => {
 
                 {/* Right Side: Insights & Recommendations */}
                 <div className="space-y-8">
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm border-t-4 border-t-amber-500">
-                        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 text-amber-500" />
-                            Performance Insights
-                        </h3>
-
-                        {query.recommendations?.length > 0 ? (
-                            <div className="space-y-6">
-                                <ul className="space-y-4">
-                                    <InsightItem
-                                        title="High Latency detected"
-                                        desc={`This query took ${query.execution_time_ms.toFixed(0)}ms to execute, which is significantly above the expected threshold.`}
-                                    />
-                                    {query.recommendations.filter((r: any) => r.type !== 'INDEX').map((rec: any) => (
-                                        <InsightItem
-                                            key={rec.id}
-                                            title={rec.title}
-                                            desc={rec.description}
-                                            type="warning"
-                                        />
-                                    ))}
-                                </ul>
-
-                                <div className="mt-8 pt-6 border-t border-border">
-                                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Recommended Actions</h4>
-                                    <div className="space-y-4">
-                                        {query.recommendations.filter((r: any) => r.status === 'PENDING').map((rec: any) => (
-                                            <div key={rec.id} className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2 text-primary">
-                                                        <CheckCircle2 className="w-4 h-4" />
-                                                        <span className="text-sm font-bold">{rec.title}</span>
-                                                    </div>
-                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10">
-                                                        {rec.estimated_impact.toFixed(0)}% IMPACT
-                                                    </span>
-                                                </div>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {rec.description}
-                                                </p>
-                                                {rec.sql_suggestion && (
-                                                    <div className="bg-accent/50 p-2 rounded-lg mt-2">
-                                                        <code className="text-[10px] font-mono whitespace-pre-wrap break-all">
-                                                            {rec.sql_suggestion}
-                                                        </code>
-                                                    </div>
-                                                )}
-                                                <div className="grid grid-cols-2 gap-2 mt-4">
-                                                    <button
-                                                        onClick={async () => {
-                                                            await api.applyRecommendation(rec.id);
-                                                            window.location.reload();
-                                                        }}
-                                                        className="py-2 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:opacity-90 transition-all"
-                                                    >
-                                                        Apply
-                                                    </button>
-                                                    <button
-                                                        onClick={async () => {
-                                                            await api.dismissRecommendation(rec.id);
-                                                            window.location.reload();
-                                                        }}
-                                                        className="py-2 border border-border rounded-lg text-xs font-bold hover:bg-accent transition-all"
-                                                    >
-                                                        Dismiss
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="py-10 text-center space-y-3">
-                                <div className="inline-flex p-3 rounded-full bg-emerald-500/10 text-emerald-500">
-                                    <CheckCircle2 className="w-6 h-6" />
-                                </div>
-                                <p className="text-sm font-bold">No issues detected</p>
-                                <p className="text-xs text-muted-foreground max-w-[200px] mx-auto">
-                                    We couldn't find any obvious performance bottlenecks for this query.
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                    <Card className="border-t-4 border-t-amber-500">
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Zap className="w-5 h-5 text-primary" />
+                                AI Recommendations
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <RecommendationsList
+                                recommendations={query.recommendations || []}
+                                onApply={async (id) => {
+                                    await api.applyRecommendation(id);
+                                    window.location.reload();
+                                }}
+                                onDismiss={async (id) => {
+                                    await api.dismissRecommendation(id);
+                                    window.location.reload();
+                                }}
+                            />
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>
