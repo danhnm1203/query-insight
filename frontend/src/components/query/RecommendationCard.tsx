@@ -1,4 +1,3 @@
-import React from 'react'
 import { CheckCircle2, AlertTriangle, Lightbulb, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -89,10 +88,10 @@ export function RecommendationCard({ recommendation, onApply, onDismiss }: Recom
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div
                             className={`h-full transition-all ${estimated_impact >= 50
-                                    ? 'bg-destructive'
-                                    : estimated_impact >= 25
-                                        ? 'bg-yellow-500'
-                                        : 'bg-primary'
+                                ? 'bg-destructive'
+                                : estimated_impact >= 25
+                                    ? 'bg-yellow-500'
+                                    : 'bg-primary'
                                 }`}
                             style={{ width: `${Math.min(estimated_impact, 100)}%` }}
                         />
