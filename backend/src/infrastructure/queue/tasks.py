@@ -82,6 +82,8 @@ def analyze_query(query_id: str):
             rec_repo = PostgresRecommendationRepository(session)
             use_case = AnalyzeQueryUseCase(uow.databases, uow.queries, rec_repo)
             await use_case.execute(UUID(query_id))
+            # Commit the session to persist recommendations
+            await session.commit()
             
     try:
         run_async(_analyze())

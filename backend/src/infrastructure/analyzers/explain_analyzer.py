@@ -74,7 +74,7 @@ class ExplainAnalyzer:
             ratio = max(actual_rows, 1) / max(plan_rows, 1)
             if ratio > 10 or ratio < 0.1:
                 findings.append({
-                    "type": RecommendationType.SCHEMA_CHANGE,
+                    "type": RecommendationType.REWRITE,  # Changed from SCHEMA_CHANGE
                     "title": f"Outdated Statistics for {node.get('Relation Name', node_type)}",
                     "description": (
                         f"The query planner estimated {plan_rows} rows but actually processed {actual_rows}. "
