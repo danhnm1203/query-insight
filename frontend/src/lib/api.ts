@@ -83,6 +83,11 @@ class ApiClient {
         return data
     }
 
+    async triggerDatabaseCheck(id: string) {
+        const { data } = await this.client.post(`/api/v1/databases/${id}/check`)
+        return data
+    }
+
     async deleteDatabase(id: string) {
         await this.client.delete(`/api/v1/databases/${id}`)
     }

@@ -6,6 +6,9 @@ interface Database {
     name: string
     type: string
     is_active: boolean
+    connection_status: 'online' | 'offline' | 'syncing' | 'unknown'
+    connection_error?: string
+    last_checked_at?: string
     created_at: string
     last_connected_at?: string
     last_collection_at?: string
@@ -19,6 +22,7 @@ interface DatabaseState {
     fetchDatabases: () => Promise<void>
     setSelectedDatabaseId: (id: string | null) => void
     addDatabase: (database: any) => Promise<void>
+    checkDatabaseConnection: (id: string) => Promise<void>
     deleteDatabase: (id: string) => Promise<void>
 }
 
@@ -58,6 +62,20 @@ export const useDatabaseStore = create<DatabaseState>((set) => ({
             const message = error.response?.data?.detail || 'Failed to add database'
             set({ error: message, isLoading: false })
             throw error
+        }
+    },
+
+    checkDatabaseConnection: async (id) => {
+        try {
+            await api.triggerDatabaseCheck(id)
+            // Optimistically update status to syncing
+            set((state) => ({
+                databases: state.databases.map(db =>
+                    db.id === id ? { ...db, connection_status: 'syncing' } : db
+                )
+            }))
+        } catch (error: any) {
+            console.error('Failed to trigger connection check:', error)
         }
     },
 

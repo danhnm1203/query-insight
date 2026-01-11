@@ -1,5 +1,5 @@
 """Domain entities."""
-from .database import Database, DatabaseType
+from .database import Database, DatabaseType, ConnectionStatus
 from .metric import Metric, MetricType
 from .query import Query, QueryStatus
 from .recommendation import Recommendation, RecommendationType, RecommendationStatus
@@ -8,6 +8,7 @@ from .user import User, PlanTier
 __all__ = [
     "Database",
     "DatabaseType",
+    "ConnectionStatus",
     "Metric",
     "MetricType",
     "Query",

@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from src.domain.entities.database import DatabaseType
+from src.domain.entities.database import DatabaseType, ConnectionStatus
 
 
 class DatabaseBase(BaseModel):
@@ -30,6 +30,9 @@ class DatabaseRead(DatabaseBase):
     id: UUID
     user_id: UUID
     is_active: bool
+    connection_status: ConnectionStatus
+    connection_error: Optional[str] = None
+    last_checked_at: Optional[datetime] = None
     created_at: datetime
     last_connected_at: Optional[datetime] = None
     last_collection_at: Optional[datetime] = None

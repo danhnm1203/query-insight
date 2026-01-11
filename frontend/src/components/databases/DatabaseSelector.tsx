@@ -50,9 +50,20 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({ className }) => {
                             {selectedDatabase ? getDbIcon(selectedDatabase.type) : <Database className="w-4 h-4" />}
                         </div>
                         <div className="flex flex-col items-start overflow-hidden">
-                            <span className="font-bold text-sm truncate w-full">
-                                {selectedDatabase ? selectedDatabase.name : "Select database..."}
-                            </span>
+                            <div className="flex items-center gap-2 w-full">
+                                <span className="font-bold text-sm truncate">
+                                    {selectedDatabase ? selectedDatabase.name : "Select database..."}
+                                </span>
+                                {selectedDatabase && (
+                                    <div className={cn(
+                                        "w-1.5 h-1.5 rounded-full shrink-0",
+                                        selectedDatabase.connection_status === 'online' && "bg-emerald-500",
+                                        selectedDatabase.connection_status === 'offline' && "bg-rose-500",
+                                        selectedDatabase.connection_status === 'syncing' && "bg-amber-500 animate-pulse",
+                                        (selectedDatabase.connection_status === 'unknown' || !selectedDatabase.connection_status) && "bg-slate-400"
+                                    )} />
+                                )}
+                            </div>
                             {selectedDatabase && (
                                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
                                     {selectedDatabase.type}
@@ -100,10 +111,19 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({ className }) => {
                                         <div className="flex flex-col flex-1 overflow-hidden">
                                             <div className="flex items-center gap-2">
                                                 <span className="font-bold text-sm truncate">{db.name}</span>
-                                                {db.is_active && (
-                                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                                                )}
+                                                <div className={cn(
+                                                    "w-2 h-2 rounded-full",
+                                                    db.connection_status === 'online' && "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]",
+                                                    db.connection_status === 'offline' && "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]",
+                                                    db.connection_status === 'syncing' && "bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]",
+                                                    (db.connection_status === 'unknown' || !db.connection_status) && "bg-slate-400"
+                                                )} />
                                             </div>
+                                            {db.connection_status === 'offline' && db.connection_error && (
+                                                <span className="text-[9px] text-rose-500 font-medium truncate max-w-[180px]">
+                                                    {db.connection_error}
+                                                </span>
+                                            )}
                                             <div className="flex items-center gap-3 text-[10px] text-muted-foreground/80 font-medium">
                                                 <span className="flex items-center gap-1.5">
                                                     <Clock className="w-3 h-3 opacity-70" />

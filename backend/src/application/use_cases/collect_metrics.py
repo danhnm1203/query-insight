@@ -39,7 +39,12 @@ class CollectMetricsUseCase:
             collector = PostgresCollector(database.encrypted_connection_string)
 
             try:
-                # 3. Collect slow queries
+                # 3. Set status to SYNCING
+                database.set_syncing()
+                await self.uow.databases.save(database)
+                await self.uow.commit() # Commit SYNCING status immediately
+
+                # 4. Collect slow queries
                 slow_queries_data = await collector.collect_slow_queries(threshold_ms=10.0, limit=20)
                 
                 queries_to_save = []
@@ -62,7 +67,7 @@ class CollectMetricsUseCase:
                     new_query_ids = [q.id for q in saved_queries]
                     logger.info(f"Collected {len(queries_to_save)} queries for DB {database_id}")
 
-                # 4. Collect enhanced metrics
+                # 5. Collect enhanced metrics
                 timestamp = datetime.utcnow()
                 metrics_to_save = []
                 
@@ -92,9 +97,10 @@ class CollectMetricsUseCase:
                 
                 logger.info(f"Saved {len(metrics_to_save)} metrics for DB {database_id}")
                 
-                # 5. Update last collection timestamps
+                # 6. Update last collection timestamps and status
                 database.update_last_connected()
                 database.update_last_collection()
+                database.set_online()
                 await self.uow.databases.save(database)
 
                 await self.uow.commit()
@@ -102,5 +108,17 @@ class CollectMetricsUseCase:
 
             except Exception as e:
                 logger.error(f"Error collecting from database {database_id}: {e}")
-                await self.uow.rollback()
+                
+                # Update status to OFFLINE if it wasn't a business logic error
+                # Re-fetch database to avoid session issues
+                async with self.uow:
+                    try:
+                        db = await self.uow.databases.get_by_id(database_id)
+                        if db:
+                            db.set_offline(str(e))
+                            await self.uow.databases.save(db)
+                            await self.uow.commit()
+                    except Exception as inner_e:
+                        logger.error(f"Failed to set offline status: {inner_e}")
+
                 raise
