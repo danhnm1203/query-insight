@@ -6,13 +6,16 @@ import {
     Share2, Copy, BarChart3, Info, Layout, Database
 } from 'lucide-react'
 import { format } from 'date-fns'
+import { toast } from 'sonner'
 import { RecommendationsList } from '../components/query/RecommendationsList'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Button } from '../components/ui/button'
 
 const QueryDetailsPage: React.FC = () => {
     const { queryId } = useParams<{ queryId: string }>()
     const [query, setQuery] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [copied, setCopied] = useState(false)
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -29,6 +32,24 @@ const QueryDetailsPage: React.FC = () => {
         }
         fetchDetails()
     }, [queryId])
+
+    const handleCopySQL = async () => {
+        if (!query?.sql_text) return
+        try {
+            await navigator.clipboard.writeText(query.sql_text)
+            setCopied(true)
+            toast.success('SQL copied to clipboard!')
+            setTimeout(() => setCopied(false), 2000)
+        } catch (error) {
+            toast.error('Failed to copy SQL')
+        }
+    }
+
+    const handleShare = () => {
+        const shareUrl = window.location.href
+        navigator.clipboard.writeText(shareUrl)
+        toast.success('Link copied to clipboard!')
+    }
 
     if (isLoading) {
         return (
@@ -68,14 +89,22 @@ const QueryDetailsPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 border border-border rounded-xl text-xs font-bold hover:bg-accent transition-all">
-                        <Copy className="w-4 h-4" />
-                        Copy SQL
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-sm">
-                        <Share2 className="w-4 h-4" />
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopySQL}
+                        disabled={!query?.sql_text}
+                    >
+                        <Copy className="w-4 h-4 mr-2" />
+                        {copied ? 'Copied!' : 'Copy SQL'}
+                    </Button>
+                    <Button
+                        size="sm"
+                        onClick={handleShare}
+                    >
+                        <Share2 className="w-4 h-4 mr-2" />
                         Share Report
-                    </button>
+                    </Button>
                 </div>
             </div>
 
