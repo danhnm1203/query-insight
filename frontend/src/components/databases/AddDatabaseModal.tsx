@@ -19,8 +19,6 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
     const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
     const [selectedPreset, setSelectedPreset] = useState<DatabasePresetKey | ''>('')
 
-    if (!isOpen) return null
-
     const handleTestConnection = async () => {
         setIsTesting(true)
         setTestResult(null)
@@ -66,6 +64,8 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
             // Error is handled by store
         }
     }
+
+    if (!isOpen) return null
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
@@ -114,7 +114,7 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
                                     <SelectItem value="">None (Manual Setup)</SelectItem>
                                     {Object.entries(DATABASE_PRESETS).map(([key, preset]) => (
                                         <SelectItem key={key} value={key}>
-                                            {preset.name} - {preset.description}
+                                            {`${preset.name} - ${preset.description}`}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
