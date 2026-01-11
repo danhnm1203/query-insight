@@ -5,11 +5,23 @@ import { formatDistanceToNow } from 'date-fns'
 import { useDatabaseStore } from '../store/useDatabaseStore'
 import AddDatabaseModal from '../components/databases/AddDatabaseModal'
 import { Button } from '../components/ui/button'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '../components/ui/alert-dialog'
 
 const DatabasesPage: React.FC = () => {
     const { databases, fetchDatabases, deleteDatabase, isLoading, error } = useDatabaseStore()
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+    const [databaseToDelete, setDatabaseToDelete] = useState<{ id: string; name: string } | null>(null)
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -22,10 +34,17 @@ const DatabasesPage: React.FC = () => {
         setIsRefreshing(false)
     }
 
-    const handleDelete = async (id: string, e: React.MouseEvent) => {
+    const handleDelete = async (id: string, name: string, e: React.MouseEvent) => {
         e.stopPropagation() // Prevent card click
-        if (window.confirm('Are you sure you want to remove this database connection?')) {
-            await deleteDatabase(id)
+        setDatabaseToDelete({ id, name })
+        setDeleteDialogOpen(true)
+    }
+
+    const confirmDelete = async () => {
+        if (databaseToDelete) {
+            await deleteDatabase(databaseToDelete.id)
+            setDeleteDialogOpen(false)
+            setDatabaseToDelete(null)
         }
     }
 
@@ -162,7 +181,7 @@ const DatabasesPage: React.FC = () => {
                                         variant="ghost"
                                         size="sm"
                                         className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                        onClick={(e) => handleDelete(db.id, e)}
+                                        onClick={(e) => handleDelete(db.id, db.name, e)}
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
                                     </Button>
@@ -181,6 +200,27 @@ const DatabasesPage: React.FC = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
             />
+
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Database Connection?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to remove <span className="font-semibold text-foreground">{databaseToDelete?.name}</span>?
+                            This will stop monitoring this database and remove all collected data. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDelete}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete Database
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
