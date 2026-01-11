@@ -14,6 +14,14 @@ class DatabaseType(str, Enum):
     ELASTICSEARCH = "elasticsearch"
 
 
+class ConnectionStatus(str, Enum):
+    """Database connection status."""
+    ONLINE = "online"
+    OFFLINE = "offline"
+    SYNCING = "syncing"
+    UNKNOWN = "unknown"
+
+
 class Database:
     """Database entity representing a connected database."""
     
@@ -25,6 +33,9 @@ class Database:
         encrypted_connection_string: str,
         is_active: bool = True,
         database_id: Optional[UUID] = None,
+        connection_status: ConnectionStatus = ConnectionStatus.UNKNOWN,
+        connection_error: Optional[str] = None,
+        last_checked_at: Optional[datetime] = None,
     ):
         self.id = database_id or uuid4()
         self.user_id = user_id
@@ -32,6 +43,9 @@ class Database:
         self.type = db_type
         self.encrypted_connection_string = encrypted_connection_string
         self.is_active = is_active
+        self.connection_status = connection_status
+        self.connection_error = connection_error
+        self.last_checked_at = last_checked_at
         self.created_at = datetime.utcnow()
         self.last_connected_at: Optional[datetime] = None
         self.last_collection_at: Optional[datetime] = None
@@ -51,6 +65,23 @@ class Database:
     def update_last_collection(self) -> None:
         """Update the last collection timestamp."""
         self.last_collection_at = datetime.utcnow()
+    
+    def set_online(self) -> None:
+        """Set connection status to ONLINE."""
+        self.connection_status = ConnectionStatus.ONLINE
+        self.connection_error = None
+        self.last_checked_at = datetime.utcnow()
+    
+    def set_offline(self, error: str) -> None:
+        """Set connection status to OFFLINE with error message."""
+        self.connection_status = ConnectionStatus.OFFLINE
+        self.connection_error = error
+        self.last_checked_at = datetime.utcnow()
+    
+    def set_syncing(self) -> None:
+        """Set connection status to SYNCING."""
+        self.connection_status = ConnectionStatus.SYNCING
+        self.last_checked_at = datetime.utcnow()
     
     def __repr__(self) -> str:
         return f"<Database {self.name} ({self.type})>"

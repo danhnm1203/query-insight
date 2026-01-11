@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-ro
 import { useEffect } from 'react'
 import { Toaster } from './components/ui/toaster'
 import { useAuthStore } from './store/useAuthStore'
+import { useDatabaseStore } from './store/useDatabaseStore'
 
 import Navbar from './components/layout/Navbar'
 import LoginPage from './pages/LoginPage'
@@ -15,10 +16,19 @@ import PricingPage from './pages/PricingPage'
 
 function App() {
     const { checkAuth, isAuthenticated } = useAuthStore()
+    const { fetchDatabases } = useDatabaseStore()
 
     useEffect(() => {
         checkAuth()
     }, [checkAuth])
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchDatabases()
+            const interval = setInterval(fetchDatabases, 30000)
+            return () => clearInterval(interval)
+        }
+    }, [isAuthenticated, fetchDatabases])
 
     return (
         <Router>

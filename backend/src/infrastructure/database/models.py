@@ -25,6 +25,7 @@ from src.domain.entities import (
     QueryStatus,
     RecommendationType,
     RecommendationStatus,
+    ConnectionStatus,
 )
 
 Base = declarative_base()
@@ -61,6 +62,13 @@ class DatabaseModel(Base):
     type = Column(Enum(DatabaseType), nullable=False)
     encrypted_connection_string = Column(Text, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    connection_status = Column(
+        Enum(ConnectionStatus, values_callable=lambda x: [e.value for e in x]),
+        default=ConnectionStatus.UNKNOWN,
+        nullable=False
+    )
+    connection_error = Column(Text, nullable=True)
+    last_checked_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_connected_at = Column(DateTime, nullable=True)
     last_collection_at = Column(DateTime, nullable=True)

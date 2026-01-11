@@ -88,3 +88,31 @@ async def delete_database(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this database"
         )
+
+
+@router.post("/{database_id}/check", status_code=status.HTTP_202_ACCEPTED)
+async def trigger_database_check(
+    database_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Trigger an asynchronous connection check for a database."""
+    db_repo = PostgresDatabaseRepository(db)
+    database = await db_repo.get_by_id(database_id)
+    
+    if not database:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Database not found"
+        )
+        
+    if database.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to check this database"
+        )
+        
+    from src.infrastructure.queue.tasks import check_database_connection
+    check_database_connection.delay(str(database_id))
+    
+    return {"status": "accepted", "message": "Connection check triggered"}

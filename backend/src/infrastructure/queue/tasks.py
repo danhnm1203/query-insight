@@ -91,3 +91,56 @@ def analyze_query(query_id: str):
     except Exception as e:
         logger.error(f"Failed to analyze query {query_id}: {e}")
         raise
+
+@celery_app.task(name="src.infrastructure.queue.tasks.check_database_connection")
+def check_database_connection(database_id: str):
+    """Task to check connectivity for a single database."""
+    logger.info(f"Checking connection for database: {database_id}")
+    
+    async def _check():
+        async with AsyncSessionLocal() as session:
+            uow = SqlAlchemyUnitOfWork(session)
+            db = await uow.databases.get_by_id(UUID(database_id))
+            if not db:
+                logger.error(f"Database {database_id} not found for status check.")
+                return
+
+            from src.infrastructure.collectors.postgres_collector import PostgresCollector
+            collector = PostgresCollector(db.encrypted_connection_string)
+            
+            try:
+                await collector.test_connection()
+                db.set_online()
+                logger.info(f"Database {database_id} is ONLINE")
+            except Exception as e:
+                db.set_offline(str(e))
+                logger.warning(f"Database {database_id} is OFFLINE: {e}")
+            
+            await uow.databases.save(db)
+            await uow.commit()
+            
+    try:
+        run_async(_check())
+    except Exception as e:
+        logger.error(f"Failed to check connection for database {database_id}: {e}")
+        raise
+
+@celery_app.task(name="src.infrastructure.queue.tasks.check_all_databases_connections")
+def check_all_databases_connections():
+    """Task to trigger connection checks for all active databases."""
+    logger.info("Triggering connection checks for all active databases")
+    
+    async def _trigger():
+        async with AsyncSessionLocal() as session:
+            uow = SqlAlchemyUnitOfWork(session)
+            active_dbs = await uow.databases.get_all_active()
+            for db in active_dbs:
+                check_database_connection.delay(str(db.id))
+            return len(active_dbs)
+            
+    try:
+        count = run_async(_trigger())
+        logger.info(f"Triggered checks for {count} databases")
+    except Exception as e:
+        logger.error(f"Failed to trigger bulk connection checks: {e}")
+        raise
