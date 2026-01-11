@@ -246,17 +246,23 @@ const DashboardPage: React.FC = () => {
                                     </div>
                                 ) : (
                                     slowQueries.map((query) => (
-                                        <div key={query.id} className="group p-4 rounded-2xl hover:bg-accent transition-all border border-border">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 uppercase">
-                                                    {query.execution_time_ms.toFixed(0)}ms
-                                                </span>
-                                                <span className="text-[10px] text-muted-foreground font-medium">{format(new Date(query.timestamp), 'HH:mm')}</span>
+                                        <Link
+                                            key={query.id}
+                                            to={`/queries/${query.id}`}
+                                            className="block"
+                                        >
+                                            <div className="group p-4 rounded-2xl hover:bg-accent transition-all border border-border cursor-pointer">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 uppercase">
+                                                        {query.execution_time_ms.toFixed(0)}ms
+                                                    </span>
+                                                    <span className="text-[10px] text-muted-foreground font-medium">{format(new Date(query.timestamp), 'HH:mm')}</span>
+                                                </div>
+                                                <p className="text-xs font-mono line-clamp-2 text-muted-foreground group-hover:text-foreground">
+                                                    {query.sql_text}
+                                                </p>
                                             </div>
-                                            <p className="text-xs font-mono line-clamp-2 text-muted-foreground group-hover:text-foreground">
-                                                {query.sql_text}
-                                            </p>
-                                        </div>
+                                        </Link>
                                     ))
                                 )}
                             </div>
