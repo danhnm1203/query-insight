@@ -15,11 +15,10 @@ import QueryPatternsCard from '../components/dashboard/QueryPatternsCard'
 import PerformanceRegressionsCard from '../components/dashboard/PerformanceRegressionsCard'
 import OnboardingFlow from '../components/onboarding/OnboardingFlow'
 import { useAuthStore } from '../store/useAuthStore'
-import { DashboardSkeleton } from '../components/common/DashboardSkeleton'
+import DatabaseSelector from '../components/databases/DatabaseSelector'
 
 const DashboardPage: React.FC = () => {
-    const { databases, fetchDatabases } = useDatabaseStore()
-    const [selectedDbId, setSelectedDbId] = useState<string>('')
+    const { databases, fetchDatabases, selectedDatabaseId, setSelectedDatabaseId } = useDatabaseStore()
     const [metrics, setMetrics] = useState<any[]>([])
     const [slowQueries, setSlowQueries] = useState<any[]>([])
     const [patterns, setPatterns] = useState<any[]>([])
@@ -50,20 +49,20 @@ const DashboardPage: React.FC = () => {
     }, [fetchDatabases])
 
     useEffect(() => {
-        if (databases.length > 0 && !selectedDbId) {
-            setSelectedDbId(databases[0].id)
+        if (databases.length > 0 && !selectedDatabaseId) {
+            setSelectedDatabaseId(databases[0].id)
         }
-    }, [databases, selectedDbId])
+    }, [databases, selectedDatabaseId, setSelectedDatabaseId])
 
     const fetchData = async () => {
-        if (!selectedDbId) return
+        if (!selectedDatabaseId) return
         setIsLoading(true)
         try {
             const [metricsData, queriesData, patternsData, trendsData] = await Promise.all([
-                api.getMetrics(selectedDbId, timeRange),
-                api.getSlowQueries(selectedDbId, 5),
-                api.getQueryPatterns(selectedDbId, 24),
-                api.getPerformanceTrends(selectedDbId)
+                api.getMetrics(selectedDatabaseId, timeRange),
+                api.getSlowQueries(selectedDatabaseId, 5),
+                api.getQueryPatterns(selectedDatabaseId, 24),
+                api.getPerformanceTrends(selectedDatabaseId)
             ])
             setMetrics(metricsData.metrics || [])
             setSlowQueries(queriesData || [])
@@ -80,7 +79,7 @@ const DashboardPage: React.FC = () => {
         fetchData()
         const interval = setInterval(fetchData, 30000) // Polling every 30s
         return () => clearInterval(interval)
-    }, [selectedDbId, timeRange])
+    }, [selectedDatabaseId, timeRange])
 
     const chartData = useMemo(() => {
         return metrics.map(m => ({
@@ -99,31 +98,27 @@ const DashboardPage: React.FC = () => {
             avgQps: avgQps.toFixed(2),
             slowCount: slowQueries.length,
             maxLatency: maxLatency.toFixed(2),
-            health: databases.find(d => d.id === selectedDbId)?.is_active ? 'Healthy' : 'Inactive'
+            health: databases.find(d => d.id === selectedDatabaseId)?.is_active ? 'Healthy' : 'Inactive'
         }
-    }, [metrics, slowQueries, selectedDbId, databases])
+    }, [metrics, slowQueries, selectedDatabaseId, databases])
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Header & Controls */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Performance Dashboard</h1>
-                    <p className="text-muted-foreground">Real-time database performance monitoring</p>
+        <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-black tracking-tight text-foreground">
+                        Dashboard
+                    </h1>
+                    <p className="text-muted-foreground font-medium">
+                        Real-time performance insights and query analysis
+                    </p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <select
-                        value={selectedDbId}
-                        onChange={(e) => setSelectedDbId(e.target.value)}
-                        className="bg-card border border-border rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none min-w-[180px]"
-                    >
-                        {databases.map(db => (
-                            <option key={db.id} value={db.id}>{db.name}</option>
-                        ))}
-                    </select>
+                    <DatabaseSelector />
 
-                    <div className="flex bg-accent/50 p-1 rounded-xl border border-border">
+                    <div className="flex bg-accent/50 p-1 rounded-xl border border-border shrink-0">
                         {['1h', '6h', '24h'].map(range => (
                             <button
                                 key={range}
@@ -140,7 +135,8 @@ const DashboardPage: React.FC = () => {
 
                     <button
                         onClick={fetchData}
-                        className="p-2 rounded-xl border border-border hover:bg-accent transition-all"
+                        className="p-3 rounded-xl border border-border hover:bg-accent transition-all shrink-0 bg-card shadow-sm"
+                        title="Refresh data"
                     >
                         <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
                     </button>
@@ -268,9 +264,9 @@ const DashboardPage: React.FC = () => {
                                 )}
                             </div>
 
-                            {selectedDbId && (
+                            {selectedDatabaseId && (
                                 <Link
-                                    to={`/databases/${selectedDbId}/queries`}
+                                    to={`/databases/${selectedDatabaseId}/queries`}
                                     className="mt-6 w-full py-3 text-sm font-bold text-primary hover:bg-primary/5 rounded-xl transition-all flex items-center justify-center gap-2"
                                 >
                                     View All Queries

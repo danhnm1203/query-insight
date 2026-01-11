@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/useAuthStore'
 import { LogOut, LayoutDashboard, Database, User, Menu, X, Zap } from 'lucide-react'
+import DatabaseSelector from '../databases/DatabaseSelector'
 
 const Navbar: React.FC = () => {
     const { isAuthenticated, user, logout } = useAuthStore()
@@ -45,6 +46,12 @@ const Navbar: React.FC = () => {
                                 <Zap className="w-4 h-4 text-amber-400" />
                                 Pricing
                             </Link>
+                        </div>
+                    )}
+                    {isAuthenticated && (
+                        <div className="hidden lg:flex items-center gap-2 ml-4">
+                            <div className="h-8 w-px bg-border mx-2" />
+                            <DatabaseSelector className="w-[240px] h-10 border-none bg-transparent hover:bg-accent/50" />
                         </div>
                     )}
                 </div>

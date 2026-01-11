@@ -13,15 +13,18 @@ interface Database {
 
 interface DatabaseState {
     databases: Database[]
+    selectedDatabaseId: string | null
     isLoading: boolean
     error: string | null
     fetchDatabases: () => Promise<void>
+    setSelectedDatabaseId: (id: string | null) => void
     addDatabase: (database: any) => Promise<void>
     deleteDatabase: (id: string) => Promise<void>
 }
 
 export const useDatabaseStore = create<DatabaseState>((set) => ({
     databases: [],
+    selectedDatabaseId: null,
     isLoading: false,
     error: null,
 
@@ -29,10 +32,18 @@ export const useDatabaseStore = create<DatabaseState>((set) => ({
         set({ isLoading: true, error: null })
         try {
             const databases = await api.getDatabases()
-            set({ databases, isLoading: false })
+            set((state) => ({
+                databases,
+                isLoading: false,
+                selectedDatabaseId: state.selectedDatabaseId || (databases.length > 0 ? databases[0].id : null)
+            }))
         } catch (error: any) {
             set({ error: 'Failed to fetch databases', isLoading: false })
         }
+    },
+
+    setSelectedDatabaseId: (id: string | null) => {
+        set({ selectedDatabaseId: id })
     },
 
     addDatabase: async (databaseData) => {
