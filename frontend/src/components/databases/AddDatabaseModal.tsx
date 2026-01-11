@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { useDatabaseStore } from '../../store/useDatabaseStore'
 import { api } from '../../lib/api'
-import { X, Loader2, Database, Shield, Zap } from 'lucide-react'
+import { X, Loader2, Database, Shield, Zap, Sparkles } from 'lucide-react'
+import { DATABASE_PRESETS, type DatabasePresetKey } from '../../lib/database-presets'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 
 interface AddDatabaseModalProps {
     isOpen: boolean
@@ -15,6 +17,7 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
     const [connectionString, setConnectionString] = useState('')
     const [isTesting, setIsTesting] = useState(false)
     const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
+    const [selectedPreset, setSelectedPreset] = useState<DatabasePresetKey | ''>('')
 
     if (!isOpen) return null
 
@@ -29,6 +32,21 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
             setTestResult({ success: false, message })
         } finally {
             setIsTesting(false)
+        }
+    }
+
+    const handlePresetSelect = (presetKey: string) => {
+        if (!presetKey) {
+            setSelectedPreset('')
+            return
+        }
+
+        const preset = DATABASE_PRESETS[presetKey as DatabasePresetKey]
+        if (preset) {
+            setSelectedPreset(presetKey as DatabasePresetKey)
+            setType(preset.type)
+            setConnectionString(preset.defaultConnectionString)
+            setTestResult(null)
         }
     }
 
@@ -82,6 +100,41 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
                     )}
 
                     <div className="space-y-4">
+                        {/* Connection Preset Selector */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-primary" />
+                                Quick Start (Optional)
+                            </label>
+                            <Select value={selectedPreset} onValueChange={handlePresetSelect}>
+                                <SelectTrigger className="w-full h-11">
+                                    <SelectValue placeholder="Choose a database preset..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="">None (Manual Setup)</SelectItem>
+                                    {Object.entries(DATABASE_PRESETS).map(([key, preset]) => {
+                                        const Icon = preset.icon
+                                        return (
+                                            <SelectItem key={key} value={key}>
+                                                <div className="flex items-center gap-2">
+                                                    <Icon className="w-4 h-4" />
+                                                    <div>
+                                                        <div className="font-medium">{preset.name}</div>
+                                                        <div className="text-xs text-muted-foreground">{preset.description}</div>
+                                                    </div>
+                                                </div>
+                                            </SelectItem>
+                                        )
+                                    })}
+                                </SelectContent>
+                            </Select>
+                            {selectedPreset && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                    ✨ Auto-filled connection template for {DATABASE_PRESETS[selectedPreset].name}
+                                </p>
+                            )}
+                        </div>
+
                         <div className="space-y-2">
                             <label className="text-sm font-semibold">Database Name</label>
                             <input
