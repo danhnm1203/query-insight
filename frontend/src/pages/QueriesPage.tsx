@@ -10,6 +10,7 @@ import { format, formatDistanceToNow } from 'date-fns'
 import { QuerySearch } from '../components/queries/QuerySearch'
 import { QueryFilters, type QueryFilters as QueryFiltersType } from '../components/queries/QueryFilters'
 import { QueryPagination } from '../components/queries/QueryPagination'
+import { QueriesSkeleton } from '../components/common/QueriesSkeleton'
 
 const QueriesPage: React.FC = () => {
     const { id } = useParams<{ id: string }>()
@@ -109,6 +110,10 @@ const QueriesPage: React.FC = () => {
             setSortBy(column)
             setSortOrder('desc')
         }
+    }
+
+    if (isLoading && queries.length === 0) {
+        return <QueriesSkeleton />
     }
 
     return (

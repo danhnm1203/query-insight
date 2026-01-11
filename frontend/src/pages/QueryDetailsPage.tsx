@@ -9,6 +9,7 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { RecommendationsList } from '../components/query/RecommendationsList'
 import { ConfirmationDialog } from '../components/recommendations/ConfirmationDialog'
+import { QueryDetailsSkeleton } from '../components/common/QueryDetailsSkeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 
@@ -62,21 +63,8 @@ const QueryDetailsPage: React.FC = () => {
         toast.success('Link copied to clipboard!')
     }
 
-    if (isLoading) {
-        return (
-            <div className="flex h-[60vh] items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-        )
-    }
-
-    if (!query) {
-        return (
-            <div className="text-center py-20">
-                <h2 className="text-2xl font-bold">Query not found</h2>
-                <Link to="/dashboard" className="text-primary hover:underline mt-4 inline-block">Return to Dashboard</Link>
-            </div>
-        )
+    if (isLoading || !query) {
+        return <QueryDetailsSkeleton />
     }
 
     return (
