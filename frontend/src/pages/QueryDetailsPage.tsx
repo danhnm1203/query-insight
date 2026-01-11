@@ -16,6 +16,7 @@ const QueryDetailsPage: React.FC = () => {
     const [query, setQuery] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [copied, setCopied] = useState(false)
+    const [loadingRecs, setLoadingRecs] = useState<Set<string>>(new Set())
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -191,13 +192,60 @@ const QueryDetailsPage: React.FC = () => {
                         <CardContent>
                             <RecommendationsList
                                 recommendations={query.recommendations || []}
+                                loadingIds={loadingRecs}
                                 onApply={async (id) => {
-                                    await api.applyRecommendation(id);
-                                    window.location.reload();
+                                    setLoadingRecs(prev => new Set(prev).add(id))
+                                    setQuery((prev: any) => ({
+                                        ...prev,
+                                        recommendations: prev.recommendations.map((rec: any) =>
+                                            rec.id === id ? { ...rec, status: 'APPLIED' } : rec
+                                        )
+                                    }))
+                                    try {
+                                        await api.applyRecommendation(id)
+                                        toast.success('Recommendation applied successfully!')
+                                    } catch (error) {
+                                        setQuery((prev: any) => ({
+                                            ...prev,
+                                            recommendations: prev.recommendations.map((rec: any) =>
+                                                rec.id === id ? { ...rec, status: 'PENDING' } : rec
+                                            )
+                                        }))
+                                        toast.error('Failed to apply recommendation')
+                                    } finally {
+                                        setLoadingRecs(prev => {
+                                            const next = new Set(prev)
+                                            next.delete(id)
+                                            return next
+                                        })
+                                    }
                                 }}
                                 onDismiss={async (id) => {
-                                    await api.dismissRecommendation(id);
-                                    window.location.reload();
+                                    setLoadingRecs(prev => new Set(prev).add(id))
+                                    setQuery((prev: any) => ({
+                                        ...prev,
+                                        recommendations: prev.recommendations.map((rec: any) =>
+                                            rec.id === id ? { ...rec, status: 'DISMISSED' } : rec
+                                        )
+                                    }))
+                                    try {
+                                        await api.dismissRecommendation(id)
+                                        toast.success('Recommendation dismissed')
+                                    } catch (error) {
+                                        setQuery((prev: any) => ({
+                                            ...prev,
+                                            recommendations: prev.recommendations.map((rec: any) =>
+                                                rec.id === id ? { ...rec, status: 'PENDING' } : rec
+                                            )
+                                        }))
+                                        toast.error('Failed to dismiss recommendation')
+                                    } finally {
+                                        setLoadingRecs(prev => {
+                                            const next = new Set(prev)
+                                            next.delete(id)
+                                            return next
+                                        })
+                                    }
                                 }}
                             />
                         </CardContent>

@@ -1,4 +1,4 @@
-import { CheckCircle2, TrendingUp, Lightbulb, AlertTriangle } from 'lucide-react'
+import { CheckCircle2, TrendingUp, Lightbulb, AlertTriangle, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -7,8 +7,9 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 interface RecommendationListProps {
     recommendations: any[]
-    onApply?: (id: string) => void
-    onDismiss?: (id: string) => void
+    onApply?: (id: string) => void | Promise<void>
+    onDismiss?: (id: string) => void | Promise<void>
+    loadingIds?: Set<string>
 }
 
 const getTypeIcon = (type: string) => {
@@ -30,7 +31,7 @@ const getSeverityVariant = (impact: number): "default" | "warning" | "destructiv
     return "default"
 }
 
-export function RecommendationsList({ recommendations, onApply, onDismiss }: RecommendationListProps) {
+export function RecommendationsList({ recommendations, onApply, onDismiss, loadingIds }: RecommendationListProps) {
     if (!recommendations || recommendations.length === 0) {
         return (
             <div className="py-10 text-center space-y-3">
@@ -121,8 +122,16 @@ export function RecommendationsList({ recommendations, onApply, onDismiss }: Rec
                                     onClick={() => onApply(rec.id)}
                                     className="flex-1"
                                     size="sm"
+                                    disabled={loadingIds?.has(rec.id)}
                                 >
-                                    Apply
+                                    {loadingIds?.has(rec.id) ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                            Applying...
+                                        </>
+                                    ) : (
+                                        'Apply'
+                                    )}
                                 </Button>
                             )}
                             {onDismiss && (
@@ -131,8 +140,16 @@ export function RecommendationsList({ recommendations, onApply, onDismiss }: Rec
                                     variant="outline"
                                     className="flex-1"
                                     size="sm"
+                                    disabled={loadingIds?.has(rec.id)}
                                 >
-                                    Dismiss
+                                    {loadingIds?.has(rec.id) ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                            Dismissing...
+                                        </>
+                                    ) : (
+                                        'Dismiss'
+                                    )}
                                 </Button>
                             )}
                         </CardFooter>
