@@ -15,6 +15,7 @@ import QueryPatternsCard from '../components/dashboard/QueryPatternsCard'
 import PerformanceRegressionsCard from '../components/dashboard/PerformanceRegressionsCard'
 import OnboardingFlow from '../components/onboarding/OnboardingFlow'
 import { useAuthStore } from '../store/useAuthStore'
+import { DashboardSkeleton } from '../components/common/DashboardSkeleton'
 
 const DashboardPage: React.FC = () => {
     const { databases, fetchDatabases } = useDatabaseStore()
@@ -277,18 +278,18 @@ const DashboardPage: React.FC = () => {
                                 </Link>
                             )}
                         </div>
-                    </div>
+                    </div >
 
                     {/* Intelligence Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    < div className="grid grid-cols-1 lg:grid-cols-2 gap-8" >
                         <QueryPatternsCard patterns={patterns.slice(0, 5)} />
                         <PerformanceRegressionsCard regressions={regressions} />
-                    </div>
+                    </div >
                 </>
             )}
 
             {showOnboarding && <OnboardingFlow onComplete={handleCompleteOnboarding} />}
-        </div>
+        </div >
     )
 }
 

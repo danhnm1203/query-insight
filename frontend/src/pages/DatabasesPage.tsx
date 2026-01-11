@@ -15,6 +15,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '../components/ui/alert-dialog'
+import { DatabasesSkeleton } from '../components/common/DatabasesSkeleton'
 
 const DatabasesPage: React.FC = () => {
     const { databases, fetchDatabases, deleteDatabase, isLoading, error } = useDatabaseStore()
@@ -48,6 +49,10 @@ const DatabasesPage: React.FC = () => {
         }
     }
 
+    if (isLoading) {
+        return <DatabasesSkeleton />
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex items-center justify-between">
@@ -63,7 +68,7 @@ const DatabasesPage: React.FC = () => {
                         className="p-2 rounded-lg border border-border hover:bg-accent transition-colors disabled:opacity-50"
                         disabled={isLoading || isRefreshing}
                     >
-                        <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`w - 5 h - 5 ${isRefreshing ? 'animate-spin' : ''} `} />
                     </button>
                     <button
                         onClick={() => setIsModalOpen(true)}
@@ -82,13 +87,7 @@ const DatabasesPage: React.FC = () => {
                 </div>
             )}
 
-            {isLoading && databases.length === 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-48 rounded-2xl border border-border bg-card animate-pulse" />
-                    ))}
-                </div>
-            ) : databases.length === 0 ? (
+            {databases.length === 0 ? (
                 <div className="text-center py-20 border-2 border-dashed border-border rounded-3xl space-y-4">
                     <div className="inline-flex p-4 rounded-2xl bg-primary/5 text-primary">
                         <Database className="w-12 h-12" />
@@ -111,7 +110,7 @@ const DatabasesPage: React.FC = () => {
                     {databases.map((db) => (
                         <div
                             key={db.id}
-                            onClick={() => navigate(`/databases/${db.id}/queries`)}
+                            onClick={() => navigate(`/ databases / ${db.id}/queries`)}
                             className="group relative rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
                         >
                             <div className="flex items-start justify-between">
@@ -191,9 +190,9 @@ const DatabasesPage: React.FC = () => {
                                     Added {formatDistanceToNow(new Date(db.created_at), { addSuffix: true })}
                                 </span>
                             </div>
-                        </div>
+                        </div >
                     ))}
-                </div>
+                </div >
             )}
 
             <AddDatabaseModal
@@ -221,7 +220,7 @@ const DatabasesPage: React.FC = () => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </div >
     )
 }
 
