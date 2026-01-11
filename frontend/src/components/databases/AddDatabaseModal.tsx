@@ -34,7 +34,7 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
     }
 
     const handlePresetSelect = (presetKey: string) => {
-        if (!presetKey) {
+        if (!presetKey || presetKey === 'none') {
             setSelectedPreset('')
             return
         }
@@ -111,7 +111,7 @@ const AddDatabaseModal: React.FC<AddDatabaseModalProps> = ({ isOpen, onClose }) 
                                     <SelectValue placeholder="Choose a database preset..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">None (Manual Setup)</SelectItem>
+                                    <SelectItem value="none">None (Manual Setup)</SelectItem>
                                     {Object.entries(DATABASE_PRESETS).map(([key, preset]) => (
                                         <SelectItem key={key} value={key}>
                                             {`${preset.name} - ${preset.description}`}
